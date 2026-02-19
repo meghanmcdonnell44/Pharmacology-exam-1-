@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NCLEX Timed Exam — Form A</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; background:#0b0f14; color:#e7eef7; }
+  header { position: sticky; top:0; background:#0f1621; border-bottom:1px solid #223146; padding:14px 18px; z-index:10; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+  .badge { display:inline-block; padding:6px 10px; border:1px solid #2a3a52; border-radius:999px; background:#101a2a; }
+  .btn { cursor:pointer; border:1px solid #2a3a52; background:#15233a; color:#e7eef7; padding:10px 14px; border-radius:10px; font-weight:600; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn.secondary { background:#0f1621; }
+  .card { background:#0f1621; border:1px solid #223146; border-radius:16px; padding:16px; margin: 14px 0; }
+  h1 { font-size: 18px; margin: 0; }
+  h2 { font-size: 16px; margin: 0 0 8px 0; }
+  p { line-height:1.35; }
+  .muted { color:#a9b8cc; }
+  .opt { margin:10px 0; padding:10px 10px; border:1px solid #223146; border-radius:12px; background:#0b0f14; }
+  label { cursor:pointer; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  @media (max-width: 740px) { .grid2 { grid-template-columns:1fr; } }
+  .qnav { display:flex; flex-wrap:wrap; gap:8px; }
+  .qnav button { width:44px; padding:10px 0; text-align:center; border-radius:12px; }
+  .qnav button.answered { background:#1a2e1d; border-color:#2c5a33; }
+  .qnav button.current { outline: 2px solid #7aa7ff; }
+  .hr { height:1px; background:#223146; margin:14px 0; }
+  .pill { padding:4px 8px; border-radius:999px; border:1px solid #223146; font-size:12px; color:#a9b8cc; }
+  .kpi { font-size: 26px; font-weight:800; }
+  .good { color:#7CFFB2; }
+  .bad { color:#FF7C7C; }
+  input[type="text"] { width: 100%; padding: 10px 12px; border-radius: 12px; border:1px solid #223146; background:#0b0f14; color:#e7eef7; font-size:16px; }
+  .small { font-size:12px; }
+  .rationale { background:#0b0f14; border:1px solid #223146; border-radius:12px; padding:12px; margin-top:10px; }
+  .link { color:#7aa7ff; text-decoration:none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <h1>NCLEX Timed Exam — Form A</h1>
+        <div class="muted small">50 questions • mixed item types • timed • answers & rationales shown after submission</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="badge">Time left: <span id="timer">--:--</span></span>
+        <button class="btn secondary" id="printBtn" onclick="window.print()" disabled>Print</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <a class="link" href="index.html">← Back to exam selector</a>
+  </div>
+
+  <div id="startCard" class="card">
+    <h2>Instructions</h2>
+    <ul class="muted">
+      <li>Time limit: 90 minutes.</li>
+      <li>Answer each question. Some are <b>Select all that apply</b>, some are <b>ordered response</b>, and some are <b>calculation</b>.</li>
+      <li>Click <b>Submit Exam</b> to see your score, answer key, and rationales.</li>
+    </ul>
+    <button class="btn" onclick="startExam()">Start Exam</button>
+  </div>
+
+  <div id="examArea" style="display:none;">
+    <div class="card">
+      <div class="row">
+        <div class="muted">Question navigation</div>
+        <div class="muted small">Green = answered</div>
+      </div>
+      <div class="hr"></div>
+      <div class="qnav" id="qnav"></div>
+    </div>
+
+    <div id="questionCard" class="card"></div>
+
+    <div class="card">
+      <div class="row">
+        <button class="btn secondary" onclick="prevQ()">Previous</button>
+        <div class="muted">Progress: <span id="progress">0/50</span></div>
+        <button class="btn secondary" onclick="nextQ()">Next</button>
+      </div>
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn" id="submitBtn" onclick="submitExam()">Submit Exam</button>
+        <div class="muted small">Submitting ends the timer and reveals rationales.</div>
+      </div>
+    </div>
+
+    <div id="results" style="display:none;" class="card"></div>
+  </div>
+</div>
+
+<script>
+const EXAM = [{"type": "mc", "prompt": "A client has albumin 1.9 g/dL and is prescribed a medication that is 95% protein-bound. What is the nurse’s best expectation?", "options": ["Greater pharmacologic effect and higher toxicity risk at usual doses", "Need for larger doses because less drug will be active", "Faster first-pass metabolism leading to reduced effects", "Increased drug elimination because binding increases filtration"], "answer": 0, "rationale": "Low albumin → less binding → more free drug → stronger effect/toxicity.", "id": 1}, {"type": "mc", "prompt": "Which route bypasses first-pass metabolism MOST directly?", "options": ["Sublingual", "Oral", "Rectal", "Gastric tube"], "answer": 0, "rationale": "Sublingual absorption enters systemic circulation without initial hepatic metabolism.", "id": 2}, {"type": "sata", "prompt": "Which findings suggest decreased perfusion may reduce medication absorption? Select all that apply.", "options": ["MAP 55 mmHg with cool extremities", "Capillary refill 5 seconds", "Severe dehydration with tachycardia", "Mild headache", "Client eating crackers", "Warm, flushed skin"], "answer": [0, 1, 2], "rationale": "Shock/dehydration/poor perfusion reduce GI and tissue absorption.", "id": 3}, {"type": "mc", "prompt": "A nurse reviews an order for an opioid. Which is the best immediate safety check?", "options": ["Assess RR and sedation level", "Assess bowel sounds", "Assess nail beds for clubbing", "Assess peripheral edema"], "answer": 0, "rationale": "Opioids depress respiration; assess breathing and sedation first.", "id": 4}, {"type": "sata", "prompt": "The nurse monitors a client after IV morphine. Which findings indicate opioid toxicity/over-sedation? Select all that apply.", "options": ["RR 9/min", "New loud snoring with pauses", "Hard to arouse", "Pain decreased to 2/10", "SpO2 89% with somnolence", "Hyperactive bowel sounds"], "answer": [0, 1, 2, 4], "rationale": "Hypoventilation/apnea, decreased LOC, and hypoxemia indicate toxicity; pain relief is expected.", "id": 5}, {"type": "mc", "prompt": "A client receives naloxone. Which assessment finding is MOST important to trend afterward?", "options": ["Respiratory rate and depth", "Appetite", "Urine color", "Skin moisture"], "answer": 0, "rationale": "Monitor for recurrent respiratory depression.", "id": 6}, {"type": "order", "prompt": "A nurse suspects opioid-induced respiratory depression. Place actions in order.", "options": ["Assess airway/breathing and check RR", "Apply oxygen and stimulate patient", "Call rapid response/notify provider per policy", "Administer naloxone per protocol", "Reassess frequently and prepare for repeat naloxone if needed"], "answer": [0, 1, 2, 3, 4], "rationale": "ABCs then reversal and ongoing monitoring.", "id": 7}, {"type": "mc", "prompt": "A client taking naproxen develops epigastric pain. Which explanation is best?", "options": ["Reduced prostaglandin protection increases gastric irritation/ulcer risk", "Increased insulin secretion causes reflux", "Direct stimulation of mucus production causes pain", "It is unrelated to NSAID use"], "answer": 0, "rationale": "NSAIDs decrease protective gastric prostaglandins.", "id": 8}, {"type": "sata", "prompt": "Which medications increase bleeding risk when taken with NSAIDs? Select all that apply.", "options": ["Warfarin", "Clopidogrel", "Aspirin", "Calcium carbonate", "Heparin", "Cetirizine"], "answer": [0, 1, 2, 4], "rationale": "Anticoagulants/antiplatelets plus NSAIDs raise bleeding risk.", "id": 9}, {"type": "calc", "prompt": "A client takes acetaminophen 500 mg 4 times per day. What is the total daily dose?", "answer": 2000, "tolerance": 0, "unit": "mg", "rationale": "500 mg × 4 = 2000 mg/day.", "id": 10}, {"type": "mc", "prompt": "Which antidote is used for acetaminophen overdose?", "options": ["Acetylcysteine", "Naloxone", "Flumazenil", "Vitamin K"], "answer": 0, "rationale": "Acetylcysteine is the antidote for acetaminophen toxicity.", "id": 11}, {"type": "sata", "prompt": "A client is prescribed prednisone. Which effects should the nurse monitor? Select all that apply.", "options": ["Elevated blood glucose", "Signs of infection", "Fluid retention/weight gain", "Improved immune response", "GI upset", "Delayed wound healing"], "answer": [0, 1, 2, 4, 5], "rationale": "Steroids increase glucose, infection risk, fluid retention, GI upset, and can delay healing.", "id": 12}, {"type": "mc", "prompt": "Which history finding would make the nurse question an order for zolmitriptan?", "options": ["Coronary artery disease", "Seasonal allergies", "Astigmatism", "Appendectomy"], "answer": 0, "rationale": "Triptans are avoided in CAD due to vasoconstriction risk.", "id": 13}, {"type": "mc", "prompt": "A client on topiramate reports difficulty concentrating. Best response?", "options": ["Notify the provider; cognitive slowing can occur with topiramate", "Reassure this is unrelated", "Stop the medication abruptly", "Take extra doses for better effect"], "answer": 0, "rationale": "Topiramate may cause cognitive slowing; provider may adjust dose/therapy.", "id": 14}, {"type": "calc", "prompt": "Order: morphine 3 mg IV. Supply: 10 mg/5 mL. How many mL will you administer? (Round to the nearest tenth.)", "answer": 1.5, "tolerance": 0.05, "unit": "mL", "rationale": "10 mg/5 mL = 2 mg/mL. 3 mg ÷ 2 = 1.5 mL.", "id": 15}, {"type": "mc", "prompt": "A client on steroids develops fever. Priority action?", "options": ["Notify provider; infection may be masked/worsened", "Reassure fever is expected", "Stop steroid abruptly", "Give live vaccine"], "answer": 0, "rationale": "Steroids suppress immunity; infection risk is high.", "id": 16}, {"type": "mc", "prompt": "Which intervention best prevents opioid constipation?", "options": ["Give antidiarrheal", "Restrict fluids", "High-protein diet only", "Scheduled stool softener ± stimulant and fluids/ambulation as appropriate"], "answer": 3, "rationale": "Constipation is expected; prophylaxis needed.", "id": 17}, {"type": "order", "prompt": "A client reports severe migraine and is prescribed a triptan. Order nursing actions.", "options": ["Assess contraindications (CAD, stroke, uncontrolled HTN)", "Obtain baseline vitals", "Administer medication if appropriate", "Reassess pain/adverse effects", "Teach dose limits and warning signs"], "answer": [0, 1, 2, 3, 4], "rationale": "Screen first, then administer and reassess/teach.", "id": 18}, {"type": "calc", "prompt": "Order: ibuprofen 600 mg PO. Supply: 200 mg tablets. How many tablets?", "answer": 3, "tolerance": 0, "unit": "tablets", "rationale": "600 ÷ 200 = 3 tablets.", "id": 19}, {"type": "mc", "prompt": "Which statement about transdermal meds is correct?", "options": ["Heat can increase absorption", "They have the fastest onset", "Skin integrity doesn't matter", "They have extensive first-pass metabolism"], "answer": 0, "rationale": "Heat increases blood flow and absorption; skin integrity matters.", "id": 20}, {"type": "mc", "prompt": "Which client is the best candidate for NSAID therapy?", "options": ["Client with creatinine 3.1 mg/dL", "Client with ankle sprain and normal kidney function", "Client taking warfarin", "Client with history of GI bleed"], "answer": 1, "rationale": "NSAIDs are appropriate when no GI/renal/bleeding risks are present.", "id": 21}, {"type": "sata", "prompt": "Which symptoms should a client on long-term NSAIDs report immediately? Select all that apply.", "options": ["Black stools", "Coffee-ground emesis", "Decreased urine output", "Mild hunger", "Dizziness/fatigue", "Increased thirst"], "answer": [0, 1, 2, 4], "rationale": "Signs of GI bleeding and renal impairment require evaluation.", "id": 22}, {"type": "mc", "prompt": "A nurse evaluates pain control. Which is the best indicator of effectiveness?", "options": ["Patient-reported pain rating after intervention", "Family says patient looks better", "BP returns to baseline", "Patient is asleep"], "answer": 0, "rationale": "Pain is subjective; reassess patient report.", "id": 23}, {"type": "sata", "prompt": "Which clients have increased risk for opioid respiratory depression? Select all that apply.", "options": ["Older adult with COPD", "Client on benzodiazepines", "Client with sleep apnea", "Healthy teen with sprain", "Client with head injury and low LOC", "Client on acetaminophen only"], "answer": [0, 1, 2, 4], "rationale": "CNS depressants and respiratory disease/OSA/low LOC increase risk.", "id": 24}, {"type": "mc", "prompt": "Which teaching is safest for acetaminophen use?", "options": ["Use freely with alcohol", "Double doses for severe pain", "Avoid exceeding the recommended daily maximum and check combination products", "It is best for inflammation"], "answer": 2, "rationale": "Prevent unintentional overdose.", "id": 25}, {"type": "mc", "prompt": "A client on steroids develops fever. Priority action?", "options": ["Reassure fever is expected", "Stop steroid abruptly", "Notify provider; infection may be masked/worsened", "Give live vaccine"], "answer": 2, "rationale": "Steroids suppress immunity; infection risk is high.", "id": 26}, {"type": "mc", "prompt": "Which intervention best prevents opioid constipation?", "options": ["High-protein diet only", "Restrict fluids", "Give antidiarrheal", "Scheduled stool softener ± stimulant and fluids/ambulation as appropriate"], "answer": 3, "rationale": "Constipation is expected; prophylaxis needed.", "id": 27}, {"type": "order", "prompt": "A client reports severe migraine and is prescribed a triptan. Order nursing actions.", "options": ["Assess contraindications (CAD, stroke, uncontrolled HTN)", "Obtain baseline vitals", "Administer medication if appropriate", "Reassess pain/adverse effects", "Teach dose limits and warning signs"], "answer": [0, 1, 2, 3, 4], "rationale": "Screen first, then administer and reassess/teach.", "id": 28}, {"type": "calc", "prompt": "Order: ibuprofen 600 mg PO. Supply: 200 mg tablets. How many tablets?", "answer": 3, "tolerance": 0, "unit": "tablets", "rationale": "600 ÷ 200 = 3 tablets.", "id": 29}, {"type": "mc", "prompt": "Which statement about transdermal meds is correct?", "options": ["Skin integrity doesn't matter", "They have extensive first-pass metabolism", "They have the fastest onset", "Heat can increase absorption"], "answer": 3, "rationale": "Heat increases blood flow and absorption; skin integrity matters.", "id": 30}, {"type": "mc", "prompt": "Which client is the best candidate for NSAID therapy?", "options": ["Client taking warfarin", "Client with history of GI bleed", "Client with creatinine 3.1 mg/dL", "Client with ankle sprain and normal kidney function"], "answer": 3, "rationale": "NSAIDs are appropriate when no GI/renal/bleeding risks are present.", "id": 31}, {"type": "sata", "prompt": "Which symptoms should a client on long-term NSAIDs report immediately? Select all that apply.", "options": ["Black stools", "Coffee-ground emesis", "Decreased urine output", "Mild hunger", "Dizziness/fatigue", "Increased thirst"], "answer": [0, 1, 2, 4], "rationale": "Signs of GI bleeding and renal impairment require evaluation.", "id": 32}, {"type": "mc", "prompt": "A nurse evaluates pain control. Which is the best indicator of effectiveness?", "options": ["Patient is asleep", "Family says patient looks better", "Patient-reported pain rating after intervention", "BP returns to baseline"], "answer": 2, "rationale": "Pain is subjective; reassess patient report.", "id": 33}, {"type": "sata", "prompt": "Which clients have increased risk for opioid respiratory depression? Select all that apply.", "options": ["Older adult with COPD", "Client on benzodiazepines", "Client with sleep apnea", "Healthy teen with sprain", "Client with head injury and low LOC", "Client on acetaminophen only"], "answer": [0, 1, 2, 4], "rationale": "CNS depressants and respiratory disease/OSA/low LOC increase risk.", "id": 34}, {"type": "mc", "prompt": "Which teaching is safest for acetaminophen use?", "options": ["Double doses for severe pain", "Avoid exceeding the recommended daily maximum and check combination products", "Use freely with alcohol", "It is best for inflammation"], "answer": 1, "rationale": "Prevent unintentional overdose.", "id": 35}, {"type": "mc", "prompt": "A client on steroids develops fever. Priority action?", "options": ["Reassure fever is expected", "Stop steroid abruptly", "Give live vaccine", "Notify provider; infection may be masked/worsened"], "answer": 3, "rationale": "Steroids suppress immunity; infection risk is high.", "id": 36}, {"type": "mc", "prompt": "Which intervention best prevents opioid constipation?", "options": ["Restrict fluids", "Give antidiarrheal", "Scheduled stool softener ± stimulant and fluids/ambulation as appropriate", "High-protein diet only"], "answer": 2, "rationale": "Constipation is expected; prophylaxis needed.", "id": 37}, {"type": "order", "prompt": "A client reports severe migraine and is prescribed a triptan. Order nursing actions.", "options": ["Assess contraindications (CAD, stroke, uncontrolled HTN)", "Obtain baseline vitals", "Administer medication if appropriate", "Reassess pain/adverse effects", "Teach dose limits and warning signs"], "answer": [0, 1, 2, 3, 4], "rationale": "Screen first, then administer and reassess/teach.", "id": 38}, {"type": "calc", "prompt": "Order: ibuprofen 600 mg PO. Supply: 200 mg tablets. How many tablets?", "answer": 3, "tolerance": 0, "unit": "tablets", "rationale": "600 ÷ 200 = 3 tablets.", "id": 39}, {"type": "mc", "prompt": "Which statement about transdermal meds is correct?", "options": ["They have extensive first-pass metabolism", "Heat can increase absorption", "They have the fastest onset", "Skin integrity doesn't matter"], "answer": 1, "rationale": "Heat increases blood flow and absorption; skin integrity matters.", "id": 40}, {"type": "mc", "prompt": "Which client is the best candidate for NSAID therapy?", "options": ["Client with ankle sprain and normal kidney function", "Client taking warfarin", "Client with history of GI bleed", "Client with creatinine 3.1 mg/dL"], "answer": 0, "rationale": "NSAIDs are appropriate when no GI/renal/bleeding risks are present.", "id": 41}, {"type": "sata", "prompt": "Which symptoms should a client on long-term NSAIDs report immediately? Select all that apply.", "options": ["Black stools", "Coffee-ground emesis", "Decreased urine output", "Mild hunger", "Dizziness/fatigue", "Increased thirst"], "answer": [0, 1, 2, 4], "rationale": "Signs of GI bleeding and renal impairment require evaluation.", "id": 42}, {"type": "mc", "prompt": "A nurse evaluates pain control. Which is the best indicator of effectiveness?", "options": ["Family says patient looks better", "Patient-reported pain rating after intervention", "BP returns to baseline", "Patient is asleep"], "answer": 1, "rationale": "Pain is subjective; reassess patient report.", "id": 43}, {"type": "sata", "prompt": "Which clients have increased risk for opioid respiratory depression? Select all that apply.", "options": ["Older adult with COPD", "Client on benzodiazepines", "Client with sleep apnea", "Healthy teen with sprain", "Client with head injury and low LOC", "Client on acetaminophen only"], "answer": [0, 1, 2, 4], "rationale": "CNS depressants and respiratory disease/OSA/low LOC increase risk.", "id": 44}, {"type": "mc", "prompt": "Which teaching is safest for acetaminophen use?", "options": ["Use freely with alcohol", "It is best for inflammation", "Avoid exceeding the recommended daily maximum and check combination products", "Double doses for severe pain"], "answer": 2, "rationale": "Prevent unintentional overdose.", "id": 45}, {"type": "mc", "prompt": "A client on steroids develops fever. Priority action?", "options": ["Reassure fever is expected", "Give live vaccine", "Notify provider; infection may be masked/worsened", "Stop steroid abruptly"], "answer": 2, "rationale": "Steroids suppress immunity; infection risk is high.", "id": 46}, {"type": "mc", "prompt": "Which intervention best prevents opioid constipation?", "options": ["Restrict fluids", "High-protein diet only", "Scheduled stool softener ± stimulant and fluids/ambulation as appropriate", "Give antidiarrheal"], "answer": 2, "rationale": "Constipation is expected; prophylaxis needed.", "id": 47}, {"type": "order", "prompt": "A client reports severe migraine and is prescribed a triptan. Order nursing actions.", "options": ["Assess contraindications (CAD, stroke, uncontrolled HTN)", "Obtain baseline vitals", "Administer medication if appropriate", "Reassess pain/adverse effects", "Teach dose limits and warning signs"], "answer": [0, 1, 2, 3, 4], "rationale": "Screen first, then administer and reassess/teach.", "id": 48}, {"type": "calc", "prompt": "Order: ibuprofen 600 mg PO. Supply: 200 mg tablets. How many tablets?", "answer": 3, "tolerance": 0, "unit": "tablets", "rationale": "600 ÷ 200 = 3 tablets.", "id": 49}, {"type": "mc", "prompt": "Which statement about transdermal meds is correct?", "options": ["They have the fastest onset", "Skin integrity doesn't matter", "Heat can increase absorption", "They have extensive first-pass metabolism"], "answer": 2, "rationale": "Heat increases blood flow and absorption; skin integrity matters.", "id": 50}];
+let current = 0;
+let started = false;
+let finished = false;
+let endTime = null;
+let timerInt = null;
+const responses = {};
+
+function fmtTime(sec) {
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
+}
+
+function startExam() {
+  if (started) return;
+  started = true;
+  document.getElementById('startCard').style.display='none';
+  document.getElementById('examArea').style.display='block';
+  const totalSec = 90*60;
+  endTime = Date.now() + totalSec*1000;
+
+  timerInt = setInterval(() => {
+    if (!started || finished) return;
+    const left = Math.max(0, Math.floor((endTime - Date.now())/1000));
+    document.getElementById('timer').textContent = fmtTime(left);
+    if (left <= 0) {
+      clearInterval(timerInt);
+      submitExam(true);
+    }
+  }, 250);
+
+  buildNav();
+  renderQuestion();
+}
+
+function buildNav() {
+  const nav = document.getElementById('qnav');
+  nav.innerHTML = '';
+  EXAM.forEach((q, idx) => {
+    const b = document.createElement('button');
+    b.className = 'btn secondary';
+    b.textContent = (idx+1);
+    b.onclick = () => { current = idx; renderQuestion(); };
+    b.id = 'nav_' + idx;
+    nav.appendChild(b);
+  });
+  updateNav();
+}
+
+function updateNav() {
+  EXAM.forEach((q, idx) => {
+    const b = document.getElementById('nav_' + idx);
+    if (!b) return;
+    b.classList.toggle('current', idx===current);
+    const r = responses[q.id];
+    const has = r !== undefined && r !== null && (Array.isArray(r) ? r.length>0 : String(r).trim()!=='');
+    b.classList.toggle('answered', has);
+  });
+  const answered = EXAM.filter(q => {
+    const r = responses[q.id];
+    if (r===undefined || r===null) return false;
+    if (Array.isArray(r)) return r.length>0;
+    return String(r).trim()!=='';
+  }).length;
+  document.getElementById('progress').textContent = answered + "/50";
+}
+
+function renderQuestion() {
+  const q = EXAM[current];
+  const card = document.getElementById('questionCard');
+  const typeLabel = (q.type==='mc'?'Multiple Choice': q.type==='sata'?'Select all that apply': q.type==='order'?'Ordered response': 'Calculation');
+  let html = `<div class="row"><h2>Question ${current+1}</h2><span class="pill">${typeLabel}</span></div>`;
+  html += `<div class="hr"></div>`;
+  html += `<p>${q.prompt}</p>`;
+
+  if (q.type === 'mc') {
+    const saved = responses[q.id];
+    q.options.forEach((opt, i) => {
+      const checked = (saved===i) ? 'checked' : '';
+      html += `
+        <div class="opt">
+          <label>
+            <input type="radio" name="q_${q.id}" value="${i}" ${checked} onchange="saveMC(${q.id}, ${i})"/>
+            <span style="margin-left:8px;">${String.fromCharCode(65+i)}. ${opt}</span>
+          </label>
+        </div>`;
+    });
+  } else if (q.type === 'sata') {
+    const saved = responses[q.id] || [];
+    q.options.forEach((opt, i) => {
+      const checked = saved.includes(i) ? 'checked' : '';
+      html += `
+        <div class="opt">
+          <label>
+            <input type="checkbox" value="${i}" ${checked} onchange="toggleSATA(${q.id}, ${i})"/>
+            <span style="margin-left:8px;">${String.fromCharCode(65+i)}. ${opt}</span>
+          </label>
+        </div>`;
+    });
+  } else if (q.type === 'order') {
+    const saved = responses[q.id] || [];
+    html += `<div class="muted small">Enter the order number for each item (1 = first). All numbers 1–${q.options.length} must be used once.</div>`;
+    html += `<div class="hr"></div>`;
+    q.options.forEach((step, i) => {
+      const val = (saved[i]!==undefined) ? saved[i] : '';
+      html += `
+        <div class="opt">
+          <div class="grid2">
+            <div><b>Item ${i+1}</b>: ${step}</div>
+            <div>
+              <label class="muted small">Order:</label>
+              <input type="text" inputmode="numeric" placeholder="1-${q.options.length}" value="${val}" oninput="saveOrder(${q.id}, ${i}, this.value)"/>
+            </div>
+          </div>
+        </div>`;
+    });
+  } else if (q.type === 'calc') {
+    const saved = responses[q.id] || '';
+    html += `<div class="muted small">Enter a number${q.unit?(' ('+q.unit+')'):'}.</div>`;
+    html += `<div class="hr"></div>`;
+    html += `<input type="text" inputmode="decimal" placeholder="Your answer" value="${saved}" oninput="saveCalc(${q.id}, this.value)"/>`;
+  }
+
+  card.innerHTML = html;
+  updateNav();
+}
+
+function saveMC(id, idx) {
+  responses[id] = idx;
+  updateNav();
+}
+
+function toggleSATA(id, idx) {
+  if (!responses[id]) responses[id] = [];
+  const arr = responses[id];
+  const k = arr.indexOf(idx);
+  if (k>=0) arr.splice(k,1); else arr.push(idx);
+  arr.sort((a,b)=>a-b);
+  updateNav();
+}
+
+function saveOrder(id, itemIdx, value) {
+  if (!responses[id]) responses[id] = [];
+  responses[id][itemIdx] = value.replace(/[^0-9]/g,'').slice(0,2);
+  updateNav();
+}
+
+function saveCalc(id, value) {
+  responses[id] = value;
+  updateNav();
+}
+
+function prevQ() {
+  if (current>0) { current--; renderQuestion(); }
+}
+function nextQ() {
+  if (current<EXAM.length-1) { current++; renderQuestion(); }
+}
+
+function arraysEqual(a,b) {
+  if (a.length!==b.length) return false;
+  for (let i=0;i<a.length;i++) if (a[i]!==b[i]) return false;
+  return true;
+}
+
+function gradeQuestion(q) {
+  const r = responses[q.id];
+  if (q.type==='mc') return r===q.answer;
+
+  if (q.type==='sata') {
+    const rr = Array.isArray(r)? r.slice().sort((a,b)=>a-b) : [];
+    const aa = q.answer.slice().sort((a,b)=>a-b);
+    return arraysEqual(rr, aa);
+  }
+
+  if (q.type==='order') {
+    const rr = Array.isArray(r)? r : [];
+    const parsed = rr.map(x => parseInt(x,10));
+    if (parsed.length !== q.options.length) return false;
+    if (parsed.some(x => !Number.isFinite(x))) return false;
+
+    const n = q.options.length;
+    const ords = parsed.slice().sort((a,b)=>a-b);
+    for (let i=0;i<n;i++) if (ords[i]!==i+1) return false;
+
+    const pairs = parsed.map((ord, itemIdx) => [ord, itemIdx]).sort((a,b)=>a[0]-b[0]);
+    const seq = pairs.map(p=>p[1]);
+    return arraysEqual(seq, q.answer);
+  }
+
+  if (q.type==='calc') {
+    const val = parseFloat(String(r).replace(/[^0-9.\-]/g,''));
+    if (!Number.isFinite(val)) return false;
+    const tol = q.tolerance || 0;
+    return Math.abs(val - q.answer) <= tol;
+  }
+
+  return false;
+}
+
+function formatUserAnswer(q) {
+  const r = responses[q.id];
+  if (q.type==='mc') {
+    return (r===undefined) ? '(no answer)' : String.fromCharCode(65+r);
+  }
+  if (q.type==='sata') {
+    if (!Array.isArray(r) || r.length===0) return '(no selections)';
+    return r.map(i=>String.fromCharCode(65+i)).join(', ');
+  }
+  if (q.type==='order') {
+    if (!Array.isArray(r) || r.length===0) return '(no order)';
+    return r.map((v,i)=>`Item ${i+1}→${v||'_'}`).join(' • ');
+  }
+  if (q.type==='calc') {
+    if (r===undefined || String(r).trim()==='') return '(no answer)';
+    return String(r).trim() + (q.unit?(' '+q.unit):'');
+  }
+  return '(no answer)';
+}
+
+function formatCorrectAnswer(q) {
+  if (q.type==='mc') {
+    return String.fromCharCode(65+q.answer) + `. ` + q.options[q.answer];
+  }
+  if (q.type==='sata') {
+    return q.answer.map(i=>String.fromCharCode(65+i)+`. `+q.options[i]).join('<br/>');
+  }
+  if (q.type==='order') {
+    return q.answer.map((itemIdx, pos)=>`${pos+1}. Item ${itemIdx+1} — ${q.options[itemIdx]}`).join('<br/>');
+  }
+  if (q.type==='calc') {
+    return `${q.answer}${q.unit?(' '+q.unit):''}`;
+  }
+  return '';
+}
+
+function submitExam(auto=false) {
+  if (finished) return;
+  finished = true;
+  clearInterval(timerInt);
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('printBtn').disabled = false;
+
+  let correct=0;
+  const details = EXAM.map(q => {
+    const ok = gradeQuestion(q);
+    if (ok) correct++;
+    return {q, ok};
+  });
+
+  const scorePct = Math.round((correct/EXAM.length)*100);
+  const res = document.getElementById('results');
+  res.style.display='block';
+
+  let html = `<div class="row">
+      <div><h2>Results</h2><div class="muted">${auto ? 'Time expired — exam auto‑submitted.' : 'Exam submitted.'}</div></div>
+      <div style="text-align:right;">
+        <div class="kpi ${scorePct>=75 ? 'good':'bad'}">${correct}/50</div>
+        <div class="muted">${scorePct}%</div>
+      </div>
+    </div>`;
+  html += `<div class="hr"></div>`;
+  html += `<div class="muted">Answer Key & Rationales</div>`;
+
+  details.forEach((d, idx) => {
+    const q = d.q;
+    const ok = d.ok;
+    const status = ok ? 'Correct' : 'Incorrect';
+    const cls = ok ? 'good' : 'bad';
+
+    html += `
+      <div class="card" style="margin-top:12px;">
+        <div class="row">
+          <div><b>Q${idx+1}</b> <span class="pill">${q.type.toUpperCase()}</span></div>
+          <div class="${cls}"><b>${status}</b></div>
+        </div>
+        <div class="hr"></div>
+        <div>${q.prompt}</div>
+        <div class="rationale">
+          <div class="muted small"><b>Your answer:</b> ${formatUserAnswer(q)}</div>
+          <div class="muted small" style="margin-top:6px;"><b>Correct answer:</b><br/>${formatCorrectAnswer(q)}</div>
+          <div style="margin-top:10px;"><b>Rationale:</b> ${q.rationale}</div>
+        </div>
+      </div>`;
+  });
+
+  res.innerHTML = html;
+  res.scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
