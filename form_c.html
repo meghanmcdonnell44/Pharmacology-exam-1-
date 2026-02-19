@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NCLEX Timed Exam — Form C</title>
+<style>
+  :root {
+    --bg: #0b0f17;
+    --panel: #121a29;
+    --panel2: #0f1624;
+    --text: #e8edf7;
+    --muted: #a8b3c7;
+    --accent: #5dd6ff;
+    --danger: #ff5d7a;
+    --ok: #52ffa8;
+    --border: rgba(255,255,255,.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif;
+    background: radial-gradient(1200px 700px at 15% 10%, rgba(93,214,255,.12), transparent 60%),
+                radial-gradient(900px 600px at 85% 25%, rgba(82,255,168,.10), transparent 65%),
+                var(--bg);
+    color: var(--text);
+  }
+  a { color: var(--accent); }
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    overflow: hidden;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,.18);
+    border-bottom: 1px solid var(--border);
+  }
+  .title {
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(18,26,41,.7);
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .timer {
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 72vh;
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .sidebar {
+    padding: 14px;
+    background: rgba(18,26,41,.35);
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 900px) {
+    .sidebar {
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+  .qnav {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+  }
+  .qbtn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: rgba(15,22,36,.6);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 0;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .05s ease, background .2s ease, border-color .2s ease;
+  }
+  .qbtn:hover { transform: translateY(-1px); border-color: rgba(93,214,255,.55); }
+  .qbtn.active { background: rgba(93,214,255,.18); border-color: rgba(93,214,255,.65); }
+  .qbtn.answered { background: rgba(82,255,168,.12); border-color: rgba(82,255,168,.35); }
+  .qbtn.flagged { background: rgba(255,93,122,.14); border-color: rgba(255,93,122,.45); }
+  .sidebar .meta {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+  }
+  .metaRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .main {
+    padding: 18px;
+  }
+  .stem {
+    font-size: 18px;
+    line-height: 1.35;
+    margin: 0 0 14px 0;
+  }
+  .tag {
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    background: rgba(15,22,36,.55);
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .choices {
+    display: grid;
+    gap: 10px;
+  }
+  label.choice {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px;
+    background: rgba(15,22,36,.55);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  label.choice:hover {
+    border-color: rgba(93,214,255,.55);
+    background: rgba(15,22,36,.72);
+  }
+  input[type="radio"], input[type="checkbox"] {
+    margin-top: 2px;
+    accent-color: var(--accent);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  button.btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: rgba(18,26,41,.65);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.btn:hover { border-color: rgba(93,214,255,.55); }
+  button.primary {
+    background: rgba(93,214,255,.18);
+    border-color: rgba(93,214,255,.55);
+  }
+  button.danger {
+    background: rgba(255,93,122,.14);
+    border-color: rgba(255,93,122,.55);
+  }
+  button.ok {
+    background: rgba(82,255,168,.12);
+    border-color: rgba(82,255,168,.45);
+  }
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .startScreen {
+    max-width: 860px;
+    margin: 30px auto;
+    padding: 18px;
+  }
+  .startScreen h1 {
+    margin: 0 0 6px 0;
+    font-size: 28px;
+  }
+  .startScreen ul {
+    margin: 10px 0 0 18px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .hidden { display: none; }
+  .calcBox {
+    display: grid;
+    gap: 10px;
+  }
+  .calcBox input {
+    width: 240px;
+    max-width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15,22,36,.55);
+    color: var(--text);
+    font-size: 16px;
+  }
+  .ordered {
+    display: grid;
+    gap: 10px;
+  }
+  .step {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(15,22,36,.55);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .step .handle {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .step .txt {
+    flex: 1;
+    line-height: 1.3;
+  }
+  .step .arrows button {
+    margin-left: 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(18,26,41,.65);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .results h2 {
+    margin: 0 0 6px 0;
+  }
+  .resultItem {
+    padding: 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(15,22,36,.55);
+    margin: 10px 0;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    border: 1px solid var(--border);
+    margin-right: 8px;
+  }
+  .badge.ok { color: var(--ok); border-color: rgba(82,255,168,.35); background: rgba(82,255,168,.12); }
+  .badge.no { color: var(--danger); border-color: rgba(255,93,122,.45); background: rgba(255,93,122,.14); }
+  .rationale {
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.35;
+  }
+</style>
+</head>
+<body>
+<div id="start" class="wrap startScreen">
+  <div class="card">
+    <div class="topbar">
+      <div class="title">NCLEX-Style Timed Exam - Pain & Pharmacology (50 Questions)</div>
+      <div class="pill"><span>Time:</span> <span class="timer">90:00</span></div>
+    </div>
+    <div style="padding:16px 18px;">
+      <h1 style="margin:0 0 8px 0;">Instructions</h1>
+      <div class="note">
+        <ul>
+          <li>This exam runs fully in your browser (works well on a Mac).</li>
+          <li>Question types include Multiple Choice, Select-All-That-Apply (SATA), Ordered Response, and Calculations.</li>
+          <li>Use the sidebar to jump between questions. You can flag questions for review.</li>
+          <li>Your progress is saved automatically in this browser.</li>
+          <li>When you submit, you'll see your score plus the answer key and rationales.</li>
+        </ul>
+      </div>
+      <div class="controls" style="margin-top:16px;">
+        <button class="btn primary" id="startBtn">Start Exam</button>
+        <button class="btn" id="resetBtn">Reset Saved Attempt</button>
+      </div>
+      <div class="note" style="margin-top:10px;">Tip: For best timing accuracy, keep this tab open during the exam.</div>
+    </div>
+  </div>
+</div>
+
+<div id="exam" class="wrap hidden">
+  <div class="card">
+    <div class="topbar">
+      <div class="title" id="headerTitle">Question</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div class="pill"><span>Answered:</span> <span id="answeredCount">0</span>/50</div>
+        <div class="pill"><span>Flagged:</span> <span id="flaggedCount">0</span></div>
+        <div class="pill"><span>Time Left:</span> <span class="timer" id="timer">90:00</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="sidebar">
+        <div class="qnav" id="qnav"></div>
+        <div class="meta">
+          <div class="metaRow"><span>Current</span><span id="curMeta">1 / 50</span></div>
+          <div class="metaRow"><span>Type</span><span id="typeMeta">MC</span></div>
+          <div class="metaRow"><span>Status</span><span id="statusMeta">Not answered</span></div>
+        </div>
+        <div class="controls" style="margin-top:12px;">
+          <button class="btn" id="flagBtn">Flag / Unflag</button>
+          <button class="btn" id="clearBtn">Clear Answer</button>
+          <button class="btn danger" id="submitBtn">Submit Exam</button>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="tag" id="qTag">Type</div>
+        <p class="stem" id="stem"></p>
+        <div id="interaction"></div>
+
+        <div class="controls">
+          <button class="btn" id="prevBtn">Previous</button>
+          <button class="btn primary" id="nextBtn">Next</button>
+        </div>
+        <div class="note" style="margin-top:10px;">Exam note: Answer key and rationales appear after submission.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="results" class="wrap hidden">
+  <div class="card">
+    <div class="topbar">
+      <div class="title">Results</div>
+      <div class="pill"><span>Score:</span> <span class="timer" id="scoreText">0/50</span></div>
+    </div>
+    <div class="main results" id="resultsBody"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [{"id": 1, "type": "mc", "stem": "Pharmokinetics 18: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 2, "type": "mc", "stem": "Pharmokinetics 19: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 3, "type": "mc", "stem": "Pharmokinetics 20: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 4, "type": "mc", "stem": "Pharmokinetics 21: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 5, "type": "mc", "stem": "Pharmokinetics 22: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 6, "type": "mc", "stem": "Pharmokinetics 23: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 7, "type": "mc", "stem": "Pharmokinetics 24: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 8, "type": "mc", "stem": "Pharmokinetics 25: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 9, "type": "mc", "stem": "Pharmokinetics 26: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 10, "type": "mc", "stem": "Pharmokinetics 27: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 11, "type": "mc", "stem": "Pharmokinetics 28: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 12, "type": "mc", "stem": "Pharmokinetics 29: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 13, "type": "mc", "stem": "Pharmokinetics 30: A drug with a narrow therapeutic index is prescribed. Which nursing action is most appropriate?", "options": ["Monitor drug levels and watch for toxicity", "Double the next dose if one is missed", "Expect few adverse effects", "Administer without reassessment if PRN"], "answer": ["A"], "rationale": "NTI drugs require close monitoring because therapeutic and toxic ranges are close."}, {"id": 14, "type": "sata", "stem": "Delegation 1: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 15, "type": "sata", "stem": "Delegation 2: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 16, "type": "sata", "stem": "Delegation 3: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 17, "type": "sata", "stem": "Delegation 4: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 18, "type": "sata", "stem": "Delegation 5: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 19, "type": "sata", "stem": "Delegation 6: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 20, "type": "sata", "stem": "Delegation 7: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 21, "type": "sata", "stem": "Delegation 8: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 22, "type": "sata", "stem": "Delegation 9: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 23, "type": "sata", "stem": "Delegation 10: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 24, "type": "sata", "stem": "Delegation 11: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 25, "type": "sata", "stem": "Delegation 12: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 26, "type": "sata", "stem": "Delegation 13: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 27, "type": "sata", "stem": "Delegation 14: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 28, "type": "sata", "stem": "Delegation 15: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 29, "type": "sata", "stem": "Delegation 16: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 30, "type": "sata", "stem": "Delegation 17: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 31, "type": "sata", "stem": "Delegation 18: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 32, "type": "sata", "stem": "Delegation 19: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 33, "type": "sata", "stem": "Delegation 20: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 34, "type": "sata", "stem": "Delegation 21: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 35, "type": "sata", "stem": "Delegation 22: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 36, "type": "sata", "stem": "Delegation 23: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 37, "type": "sata", "stem": "Delegation 24: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 38, "type": "sata", "stem": "Delegation 25: Which tasks are appropriate to delegate to UAP for a stable client? Select all that apply.", "options": ["Obtain routine vital signs", "Assist with bathing/toileting", "Teach new medication information", "Assess lung sounds", "Ambulate with gait belt if ordered"], "answer": ["A", "B", "E"], "rationale": "UAP can perform routine non-assessment tasks; RN completes assessment/teaching."}, {"id": 39, "type": "calc", "stem": "Calculation 1: Infuse 500 mL over 4 hours. Rate (mL/hr)?", "answer": ["125"], "rationale": "Rate = total volume ÷ hours."}, {"id": 40, "type": "calc", "stem": "Calculation 2: Infuse 750 mL over 6 hours. Rate (mL/hr)?", "answer": ["125"], "rationale": "Rate = total volume ÷ hours."}, {"id": 41, "type": "calc", "stem": "Calculation 3: Infuse 900 mL over 9 hours. Rate (mL/hr)?", "answer": ["100"], "rationale": "Rate = total volume ÷ hours."}, {"id": 42, "type": "calc", "stem": "Calculation 4: Infuse 1000 mL over 10 hours. Rate (mL/hr)?", "answer": ["100"], "rationale": "Rate = total volume ÷ hours."}, {"id": 43, "type": "calc", "stem": "Calculation 5: Infuse 250 mL over 2 hours. Rate (mL/hr)?", "answer": ["125"], "rationale": "Rate = total volume ÷ hours."}, {"id": 44, "type": "calc", "stem": "Calculation 6: Infuse 600 mL over 5 hours. Rate (mL/hr)?", "answer": ["120"], "rationale": "Rate = total volume ÷ hours."}, {"id": 45, "type": "calc", "stem": "Calculation 7: Infuse 1200 mL over 12 hours. Rate (mL/hr)?", "answer": ["100"], "rationale": "Rate = total volume ÷ hours."}, {"id": 46, "type": "calc", "stem": "Calculation 8: Infuse 360 mL over 3 hours. Rate (mL/hr)?", "answer": ["120"], "rationale": "Rate = total volume ÷ hours."}, {"id": 47, "type": "calc", "stem": "Calculation 9: Infuse 840 mL over 7 hours. Rate (mL/hr)?", "answer": ["120"], "rationale": "Rate = total volume ÷ hours."}, {"id": 48, "type": "calc", "stem": "Calculation 10: Infuse 480 mL over 6 hours. Rate (mL/hr)?", "answer": ["80"], "rationale": "Rate = total volume ÷ hours."}, {"id": 49, "type": "mc", "stem": "Extra Safety 149: A client receives an opioid and becomes increasingly sleepy. Which assessment is priority?", "options": ["Respiratory rate and level of consciousness", "Bowel sounds", "Skin color only", "Daily weight"], "answer": ["A"], "rationale": "Opioids can depress respiration; assess RR/LOC first."}, {"id": 50, "type": "mc", "stem": "Extra Safety 150: A client receives an opioid and becomes increasingly sleepy. Which assessment is priority?", "options": ["Respiratory rate and level of consciousness", "Bowel sounds", "Skin color only", "Daily weight"], "answer": ["A"], "rationale": "Opioids can depress respiration; assess RR/LOC first."}];
+const STORAGE_KEY = "nclex_painpharm_attempt_v1";
+
+function defaultState(){
+  return {
+    startedAt: null,
+    durationSec: 90*60,
+    answers: {},
+    flagged: {},
+    submitted: false
+  };
+}
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    return Object.assign(defaultState(), s);
+  } catch(e) {
+    return defaultState();
+  }
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function resetState(){
+  localStorage.removeItem(STORAGE_KEY);
+  state = defaultState();
+}
+
+let state = loadState();
+let currentIndex = 0;
+let tickHandle = null;
+
+function fmtTime(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+
+function computeTimeLeft(){
+  if(!state.startedAt) return state.durationSec;
+  const elapsed = (Date.now() - state.startedAt)/1000;
+  return state.durationSec - elapsed;
+}
+
+function answeredCount(){
+  let c=0;
+  for(const q of QUESTIONS){
+    const a = state.answers[q.id];
+    if(a==null) continue;
+    if(q.type==="mc" && typeof a==="string" && a.trim()!=="") c++;
+    else if(q.type==="calc" && typeof a==="string" && a.trim()!=="") c++;
+    else if(q.type==="sata" && Array.isArray(a) && a.length>0) c++;
+    else if(q.type==="ordered" && a && Array.isArray(a.order) && a.order.length===q.steps.length) c++;
+  }
+  return c;
+}
+
+function flaggedCount(){
+  return Object.keys(state.flagged).length;
+}
+
+function isAnswered(q){
+  const a = state.answers[q.id];
+  if(a==null) return false;
+  if(q.type==="mc" || q.type==="calc") return String(a).trim()!=="";
+  if(q.type==="sata") return Array.isArray(a) && a.length>0;
+  if(q.type==="ordered") return a && Array.isArray(a.order) && a.order.length===q.steps.length;
+  return false;
+}
+
+function isCorrect(q){
+  const a = state.answers[q.id];
+  if(q.type==="calc"){
+    const want = String(q.answer[0]).trim();
+    const got = String(a ?? "").trim();
+    const wantNum = Number(want);
+    const gotNum = Number(got);
+    if(!Number.isNaN(wantNum) && !Number.isNaN(gotNum)){
+      return Math.abs(wantNum - gotNum) <= 0.001;
+    }
+    return got.toLowerCase() === want.toLowerCase();
+  }
+  if(q.type==="mc"){
+    return String(a) === q.answer[0];
+  }
+  if(q.type==="sata"){
+    const got = Array.isArray(a) ? a.slice().sort() : [];
+    const want = q.answer.slice().sort();
+    return JSON.stringify(got) === JSON.stringify(want);
+  }
+  if(q.type==="ordered"){
+    const got = (a && Array.isArray(a.order)) ? a.order : [];
+    const want = q.answer_order;
+    return JSON.stringify(got) === JSON.stringify(want);
+  }
+  return false;
+}
+
+function buildNav(){
+  const nav = document.getElementById("qnav");
+  nav.innerHTML="";
+  for(let i=0;i<QUESTIONS.length;i++){
+    const q = QUESTIONS[i];
+    const b = document.createElement("button");
+    b.className="qbtn";
+    b.textContent = String(i+1);
+    b.addEventListener("click", ()=>{ currentIndex=i; render(); });
+    nav.appendChild(b);
+  }
+}
+
+function updateNavStyles(){
+  const buttons = Array.from(document.querySelectorAll(".qbtn"));
+  buttons.forEach((b, i)=>{
+    const q = QUESTIONS[i];
+    b.classList.toggle("active", i===currentIndex);
+    b.classList.toggle("answered", isAnswered(q));
+    b.classList.toggle("flagged", !!state.flagged[q.id]);
+  });
+}
+
+function render(){
+  const q = QUESTIONS[currentIndex];
+  document.getElementById("headerTitle").textContent = `Question ${currentIndex+1}`;
+  document.getElementById("curMeta").textContent = `${currentIndex+1} / ${QUESTIONS.length}`;
+  document.getElementById("typeMeta").textContent = q.type.toUpperCase();
+  document.getElementById("statusMeta").textContent = isAnswered(q) ? "Answered" : "Not answered";
+  document.getElementById("qTag").textContent = ({
+    mc:"Multiple Choice",
+    sata:"Select all that apply (SATA)",
+    ordered:"Ordered response",
+    calc:"Calculation / short answer"
+  })[q.type] || q.type;
+
+  document.getElementById("stem").textContent = q.stem;
+
+  const area = document.getElementById("interaction");
+  area.innerHTML = "";
+
+  if(q.type==="mc" || q.type==="sata"){
+    const wrap = document.createElement("div");
+    wrap.className="choices";
+    const current = state.answers[q.id] ?? (q.type==="sata" ? [] : "");
+    q.options.forEach((opt, idx)=>{
+      const letter = String.fromCharCode(65+idx);
+      const id = `q${q.id}_${letter}`;
+      const lab = document.createElement("label");
+      lab.className="choice";
+      const inp = document.createElement("input");
+      inp.type = (q.type==="mc") ? "radio" : "checkbox";
+      inp.name = `q${q.id}`;
+      inp.id = id;
+      inp.value = letter;
+      if(q.type==="mc"){
+        inp.checked = (current === letter);
+      } else {
+        inp.checked = Array.isArray(current) && current.includes(letter);
+      }
+      inp.addEventListener("change", ()=>{
+        if(q.type==="mc"){
+          state.answers[q.id] = letter;
+        } else {
+          const arr = new Set(Array.isArray(state.answers[q.id]) ? state.answers[q.id] : []);
+          if(inp.checked) arr.add(letter); else arr.delete(letter);
+          state.answers[q.id] = Array.from(arr);
+        }
+        saveState();
+        renderMeta();
+        updateNavStyles();
+      });
+
+      const txt = document.createElement("div");
+      txt.innerHTML = `<strong>${letter}.</strong> ${opt}`;
+      lab.appendChild(inp);
+      lab.appendChild(txt);
+      wrap.appendChild(lab);
+    });
+    area.appendChild(wrap);
+  }
+
+  if(q.type==="calc"){
+    const box = document.createElement("div");
+    box.className="calcBox";
+    const inp = document.createElement("input");
+    inp.type="text";
+    inp.placeholder="Type your answer (e.g., Yes, No, 3.125)";
+    inp.value = state.answers[q.id] ?? "";
+    inp.addEventListener("input", ()=>{
+      state.answers[q.id] = inp.value;
+      saveState();
+      renderMeta();
+      updateNavStyles();
+    });
+    box.appendChild(inp);
+    const hint = document.createElement("div");
+    hint.className="note";
+    hint.textContent = "Tip: For numeric answers, enter a number (decimals allowed). For Yes/No, type Yes or No.";
+    box.appendChild(hint);
+    area.appendChild(box);
+  }
+
+  if(q.type==="ordered"){
+    const ordWrap = document.createElement("div");
+    ordWrap.className="ordered";
+    let cur = state.answers[q.id]?.order;
+    if(!Array.isArray(cur) || cur.length !== q.steps.length){
+      cur = Array.from({length:q.steps.length}, (_,i)=> i+1);
+      state.answers[q.id] = {order:cur};
+      saveState();
+    }
+    function renderSteps(){
+      ordWrap.innerHTML="";
+      cur.forEach((stepNum, pos)=>{
+        const row = document.createElement("div");
+        row.className="step";
+        const handle = document.createElement("div");
+        handle.className="handle";
+        handle.textContent = String(pos+1);
+        const txt = document.createElement("div");
+        txt.className="txt";
+        txt.textContent = q.steps[stepNum-1];
+        const arrows = document.createElement("div");
+        arrows.className="arrows";
+        const up = document.createElement("button");
+        up.textContent = "▲";
+        up.disabled = pos===0;
+        up.addEventListener("click", ()=>{
+          const t = cur[pos-1]; cur[pos-1]=cur[pos]; cur[pos]=t;
+          state.answers[q.id] = {order:cur};
+          saveState();
+          renderSteps();
+          renderMeta();
+          updateNavStyles();
+        });
+        const dn = document.createElement("button");
+        dn.textContent = "▼";
+        dn.disabled = pos===cur.length-1;
+        dn.addEventListener("click", ()=>{
+          const t = cur[pos+1]; cur[pos+1]=cur[pos]; cur[pos]=t;
+          state.answers[q.id] = {order:cur};
+          saveState();
+          renderSteps();
+          renderMeta();
+          updateNavStyles();
+        });
+        arrows.appendChild(up);
+        arrows.appendChild(dn);
+        row.appendChild(handle);
+        row.appendChild(txt);
+        row.appendChild(arrows);
+        ordWrap.appendChild(row);
+      });
+      const note = document.createElement("div");
+      note.className="note";
+      note.textContent = "Use the arrows to place the actions in correct order.";
+      ordWrap.appendChild(note);
+    }
+    renderSteps();
+    area.appendChild(ordWrap);
+  }
+
+  document.getElementById("prevBtn").disabled = currentIndex===0;
+  document.getElementById("nextBtn").disabled = currentIndex===QUESTIONS.length-1;
+
+  updateNavStyles();
+  renderMeta();
+}
+
+function renderMeta(){
+  document.getElementById("answeredCount").textContent = answeredCount();
+  document.getElementById("flaggedCount").textContent = flaggedCount();
+  const q = QUESTIONS[currentIndex];
+  document.getElementById("statusMeta").textContent = isAnswered(q) ? "Answered" : "Not answered";
+}
+
+function startTimer(){
+  if(tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(()=>{
+    const left = computeTimeLeft();
+    document.getElementById("timer").textContent = fmtTime(left);
+    if(left <= 0){
+      clearInterval(tickHandle);
+      tickHandle = null;
+      submitExam(true);
+    }
+  }, 250);
+}
+
+function submitExam(auto=false){
+  if(state.submitted) return;
+  if(!auto){
+    const ok = confirm("Submit now? You will see answers and rationales.");
+    if(!ok) return;
+  }
+  state.submitted = true;
+  saveState();
+
+  let score=0;
+  for(const q of QUESTIONS){
+    if(isCorrect(q)) score++;
+  }
+
+  document.getElementById("exam").classList.add("hidden");
+  document.getElementById("results").classList.remove("hidden");
+  document.getElementById("scoreText").textContent = `${score}/${QUESTIONS.length}`;
+
+  const body = document.getElementById("resultsBody");
+  body.innerHTML = `<p class="note">Auto-grading note: SATA requires an exact match. Ordered response requires the exact sequence. Calculations accept a small numeric tolerance (plus case-insensitive Yes/No).</p>`;
+
+  for(let i=0;i<QUESTIONS.length;i++){
+    const q = QUESTIONS[i];
+    const ok = isCorrect(q);
+    const div = document.createElement("div");
+    div.className="resultItem";
+    const badge = `<span class="badge ${ok ? "ok":"no"}">${ok ? "Correct":"Incorrect"}</span>`;
+    const your = state.answers[q.id];
+    let yourTxt = "";
+    let correctTxt = "";
+
+    if(q.type==="mc"){
+      yourTxt = your ? your : "(no answer)";
+      correctTxt = q.answer[0];
+    } else if(q.type==="sata"){
+      yourTxt = (Array.isArray(your) && your.length) ? your.slice().sort().join(", ") : "(no answer)";
+      correctTxt = q.answer.slice().sort().join(", ");
+    } else if(q.type==="calc"){
+      yourTxt = (your ?? "").toString().trim() || "(no answer)";
+      correctTxt = q.answer[0];
+    } else if(q.type==="ordered"){
+      const y = (your && Array.isArray(your.order)) ? your.order.join("-") : "(no answer)";
+      const c = q.answer_order.join("-");
+      yourTxt = y;
+      correctTxt = c;
+    }
+
+    div.innerHTML = `
+      <div style="margin-bottom:6px;">
+        ${badge}<strong>Q${i+1}.</strong> ${q.stem}
+      </div>
+      <div class="note"><strong>Your answer:</strong> ${yourTxt} &nbsp;&nbsp; <strong>Correct:</strong> ${correctTxt}</div>
+      <div class="rationale"><strong>Rationale:</strong> ${q.rationale}</div>
+    `;
+    body.appendChild(div);
+  }
+
+  body.insertAdjacentHTML("beforeend", `
+    <div class="controls" style="margin-top:16px;">
+      <button class="btn ok" onclick="window.print()">Print / Save as PDF</button>
+      <button class="btn" onclick="resetState(); location.reload();">Start New Attempt</button>
+    </div>
+  `);
+}
+
+document.getElementById("startBtn").addEventListener("click", ()=>{
+  if(state.submitted){
+    alert("This attempt is already submitted. Use 'Reset Saved Attempt' to start over.");
+    return;
+  }
+  if(!state.startedAt){
+    state.startedAt = Date.now();
+    saveState();
+  }
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("exam").classList.remove("hidden");
+  buildNav();
+  render();
+  document.getElementById("timer").textContent = fmtTime(computeTimeLeft());
+  startTimer();
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  const ok = confirm("Reset saved attempt? This clears answers and timer for this browser.");
+  if(!ok) return;
+  resetState();
+  location.reload();
+});
+
+document.getElementById("prevBtn").addEventListener("click", ()=>{
+  if(currentIndex>0) currentIndex--;
+  render();
+});
+document.getElementById("nextBtn").addEventListener("click", ()=>{
+  if(currentIndex<QUESTIONS.length-1) currentIndex++;
+  render();
+});
+document.getElementById("flagBtn").addEventListener("click", ()=>{
+  const q = QUESTIONS[currentIndex];
+  if(state.flagged[q.id]) delete state.flagged[q.id];
+  else state.flagged[q.id]=true;
+  saveState();
+  renderMeta();
+  updateNavStyles();
+});
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  const q = QUESTIONS[currentIndex];
+  delete state.answers[q.id];
+  if(q.type==="ordered"){
+    state.answers[q.id] = {order: Array.from({length:q.steps.length}, (_,i)=> i+1)};
+  }
+  saveState();
+  render();
+});
+document.getElementById("submitBtn").addEventListener("click", ()=> submitExam(false));
+
+(function init(){
+  if(state.submitted){
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("results").classList.remove("hidden");
+    let score=0;
+    for(const q of QUESTIONS) if(isCorrect(q)) score++;
+    document.getElementById("scoreText").textContent = `${score}/${QUESTIONS.length}`;
+    const body = document.getElementById("resultsBody");
+    body.innerHTML = `<p class="note">This attempt was already submitted on this browser.</p>`;
+    for(let i=0;i<QUESTIONS.length;i++){
+      const q = QUESTIONS[i];
+      const ok = isCorrect(q);
+      const div = document.createElement("div");
+      div.className="resultItem";
+      const badge = `<span class="badge ${ok ? "ok":"no"}">${ok ? "Correct":"Incorrect"}</span>`;
+      const your = state.answers[q.id];
+      let yourTxt="", correctTxt="";
+      if(q.type==="mc"){ yourTxt = your ? your : "(no answer)"; correctTxt=q.answer[0]; }
+      else if(q.type==="sata"){ yourTxt=(Array.isArray(your)&&your.length)?your.slice().sort().join(", "):"(no answer)"; correctTxt=q.answer.slice().sort().join(", "); }
+      else if(q.type==="calc"){ yourTxt=(your??"").toString().trim()||"(no answer)"; correctTxt=q.answer[0]; }
+      else if(q.type==="ordered"){ yourTxt=(your&&Array.isArray(your.order))?your.order.join("-"):"(no answer)"; correctTxt=q.answer_order.join("-"); }
+      div.innerHTML = `<div style="margin-bottom:6px;">${badge}<strong>Q${i+1}.</strong> ${q.stem}</div>
+        <div class="note"><strong>Your answer:</strong> ${yourTxt} &nbsp;&nbsp; <strong>Correct:</strong> ${correctTxt}</div>
+        <div class="rationale"><strong>Rationale:</strong> ${q.rationale}</div>`;
+      body.appendChild(div);
+    }
+    body.insertAdjacentHTML("beforeend", `
+      <div class="controls" style="margin-top:16px;">
+        <button class="btn ok" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn" onclick="resetState(); location.reload();">Start New Attempt</button>
+      </div>
+    `);
+    return;
+  }
+
+  if(state.startedAt){
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("exam").classList.remove("hidden");
+    buildNav();
+    render();
+    document.getElementById("timer").textContent = fmtTime(computeTimeLeft());
+    startTimer();
+  }
+})();
+</script>
+</body>
+</html>
