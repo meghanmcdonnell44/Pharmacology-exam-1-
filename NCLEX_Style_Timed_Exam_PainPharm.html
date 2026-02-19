@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NCLEX-Style Timed Exam (Pain & Pharmacology)</title>
+<style>
+  :root {
+    --bg: #0b0f17;
+    --panel: #121a29;
+    --panel2: #0f1624;
+    --text: #e8edf7;
+    --muted: #a8b3c7;
+    --accent: #5dd6ff;
+    --danger: #ff5d7a;
+    --ok: #52ffa8;
+    --border: rgba(255,255,255,.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif;
+    background: radial-gradient(1200px 700px at 15% 10%, rgba(93,214,255,.12), transparent 60%),
+                radial-gradient(900px 600px at 85% 25%, rgba(82,255,168,.10), transparent 65%),
+                var(--bg);
+    color: var(--text);
+  }
+  a { color: var(--accent); }
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    overflow: hidden;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,.18);
+    border-bottom: 1px solid var(--border);
+  }
+  .title {
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(18,26,41,.7);
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .timer {
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 72vh;
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .sidebar {
+    padding: 14px;
+    background: rgba(18,26,41,.35);
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 900px) {
+    .sidebar {
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+  .qnav {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+  }
+  .qbtn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: rgba(15,22,36,.6);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 0;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .05s ease, background .2s ease, border-color .2s ease;
+  }
+  .qbtn:hover { transform: translateY(-1px); border-color: rgba(93,214,255,.55); }
+  .qbtn.active { background: rgba(93,214,255,.18); border-color: rgba(93,214,255,.65); }
+  .qbtn.answered { background: rgba(82,255,168,.12); border-color: rgba(82,255,168,.35); }
+  .qbtn.flagged { background: rgba(255,93,122,.14); border-color: rgba(255,93,122,.45); }
+  .sidebar .meta {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+  }
+  .metaRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .main {
+    padding: 18px;
+  }
+  .stem {
+    font-size: 18px;
+    line-height: 1.35;
+    margin: 0 0 14px 0;
+  }
+  .tag {
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    background: rgba(15,22,36,.55);
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .choices {
+    display: grid;
+    gap: 10px;
+  }
+  label.choice {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px;
+    background: rgba(15,22,36,.55);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  label.choice:hover {
+    border-color: rgba(93,214,255,.55);
+    background: rgba(15,22,36,.72);
+  }
+  input[type="radio"], input[type="checkbox"] {
+    margin-top: 2px;
+    accent-color: var(--accent);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  button.btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: rgba(18,26,41,.65);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.btn:hover { border-color: rgba(93,214,255,.55); }
+  button.primary {
+    background: rgba(93,214,255,.18);
+    border-color: rgba(93,214,255,.55);
+  }
+  button.danger {
+    background: rgba(255,93,122,.14);
+    border-color: rgba(255,93,122,.55);
+  }
+  button.ok {
+    background: rgba(82,255,168,.12);
+    border-color: rgba(82,255,168,.45);
+  }
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .startScreen {
+    max-width: 860px;
+    margin: 30px auto;
+    padding: 18px;
+  }
+  .startScreen h1 {
+    margin: 0 0 6px 0;
+    font-size: 28px;
+  }
+  .startScreen ul {
+    margin: 10px 0 0 18px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .hidden { display: none; }
+  .calcBox {
+    display: grid;
+    gap: 10px;
+  }
+  .calcBox input {
+    width: 240px;
+    max-width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15,22,36,.55);
+    color: var(--text);
+    font-size: 16px;
+  }
+  .ordered {
+    display: grid;
+    gap: 10px;
+  }
+  .step {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(15,22,36,.55);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .step .handle {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .step .txt {
+    flex: 1;
+    line-height: 1.3;
+  }
+  .step .arrows button {
+    margin-left: 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(18,26,41,.65);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .results h2 {
+    margin: 0 0 6px 0;
+  }
+  .resultItem {
+    padding: 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(15,22,36,.55);
+    margin: 10px 0;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    border: 1px solid var(--border);
+    margin-right: 8px;
+  }
+  .badge.ok { color: var(--ok); border-color: rgba(82,255,168,.35); background: rgba(82,255,168,.12); }
+  .badge.no { color: var(--danger); border-color: rgba(255,93,122,.45); background: rgba(255,93,122,.14); }
+  .rationale {
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.35;
+  }
+</style>
+</head>
+<body>
+<div id="start" class="wrap startScreen">
+  <div class="card">
+    <div class="topbar">
+      <div class="title">NCLEX-Style Timed Exam - Pain & Pharmacology (50 Questions)</div>
+      <div class="pill"><span>Time:</span> <span class="timer">90:00</span></div>
+    </div>
+    <div style="padding:16px 18px;">
+      <h1 style="margin:0 0 8px 0;">Instructions</h1>
+      <div class="note">
+        <ul>
+          <li>This exam runs fully in your browser (works well on a Mac).</li>
+          <li>Question types include Multiple Choice, Select-All-That-Apply (SATA), Ordered Response, and Calculations.</li>
+          <li>Use the sidebar to jump between questions. You can flag questions for review.</li>
+          <li>Your progress is saved automatically in this browser.</li>
+          <li>When you submit, you'll see your score plus the answer key and rationales.</li>
+        </ul>
+      </div>
+      <div class="controls" style="margin-top:16px;">
+        <button class="btn primary" id="startBtn">Start Exam</button>
+        <button class="btn" id="resetBtn">Reset Saved Attempt</button>
+      </div>
+      <div class="note" style="margin-top:10px;">Tip: For best timing accuracy, keep this tab open during the exam.</div>
+    </div>
+  </div>
+</div>
+
+<div id="exam" class="wrap hidden">
+  <div class="card">
+    <div class="topbar">
+      <div class="title" id="headerTitle">Question</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div class="pill"><span>Answered:</span> <span id="answeredCount">0</span>/50</div>
+        <div class="pill"><span>Flagged:</span> <span id="flaggedCount">0</span></div>
+        <div class="pill"><span>Time Left:</span> <span class="timer" id="timer">90:00</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="sidebar">
+        <div class="qnav" id="qnav"></div>
+        <div class="meta">
+          <div class="metaRow"><span>Current</span><span id="curMeta">1 / 50</span></div>
+          <div class="metaRow"><span>Type</span><span id="typeMeta">MC</span></div>
+          <div class="metaRow"><span>Status</span><span id="statusMeta">Not answered</span></div>
+        </div>
+        <div class="controls" style="margin-top:12px;">
+          <button class="btn" id="flagBtn">Flag / Unflag</button>
+          <button class="btn" id="clearBtn">Clear Answer</button>
+          <button class="btn danger" id="submitBtn">Submit Exam</button>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="tag" id="qTag">Type</div>
+        <p class="stem" id="stem"></p>
+        <div id="interaction"></div>
+
+        <div class="controls">
+          <button class="btn" id="prevBtn">Previous</button>
+          <button class="btn primary" id="nextBtn">Next</button>
+        </div>
+        <div class="note" style="margin-top:10px;">Exam note: Answer key and rationales appear after submission.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="results" class="wrap hidden">
+  <div class="card">
+    <div class="topbar">
+      <div class="title">Results</div>
+      <div class="pill"><span>Score:</span> <span class="timer" id="scoreText">0/50</span></div>
+    </div>
+    <div class="main results" id="resultsBody"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [{"id": 1, "type": "mc", "stem": "A client with chronic osteoarthritis asks why ibuprofen can reduce swelling but acetaminophen usually cannot. Which explanation is most accurate?", "options": ["Ibuprofen blocks prostaglandin production throughout the body; acetaminophen mainly acts in the brain and has no meaningful anti-inflammatory effect.", "Acetaminophen irreversibly inhibits platelets, so it cannot be used for inflammation.", "Ibuprofen activates opioid receptors to reduce pain and inflammation.", "Acetaminophen is a first-generation NSAID and therefore does not treat inflammation."], "answer": ["A"], "rationale": "First-generation NSAIDs (eg, ibuprofen) reduce prostaglandin production and therefore decrease inflammation, pain, and fever, while acetaminophen is very selective to the brain and provides analgesia/antipyresis without anti-inflammatory effects."}, {"id": 2, "type": "sata", "stem": "The nurse is preparing to administer a first-generation NSAID. Which patient histories are contraindications for first-generation NSAIDs? Select all that apply.", "options": ["Hypertension and heart failure", "History of GI bleed or peptic ulcer disease", "Renal impairment", "Asthma", "Migraine with aura", "Diabetes mellitus (well controlled) with no vascular disease"], "answer": ["A", "B", "C", "D"], "rationale": "First-generation NSAIDs are contraindicated in hypertension/heart failure, history of GI bleed/PUD, renal impairment, and asthma. Migraine with aura is not a contraindication to NSAIDs, and diabetes alone is not listed as a contraindication in these materials."}, {"id": 3, "type": "mc", "stem": "A client taking naproxen asks what to do to reduce stomach irritation. Which instruction should the nurse provide?", "options": ["Take the medication with food or milk each time.", "Take the medication on an empty stomach with a full glass of water.", "Take the medication only at bedtime.", "Crush the tablet and dissolve it in juice."], "answer": ["A"], "rationale": "NSAIDs can irritate the gastric lining and increase GI bleed risk. Teaching includes taking NSAIDs with food or milk to reduce GI irritation."}, {"id": 4, "type": "mc", "stem": "A client has been taking aspirin daily for cardioprotection. Which new symptom is most concerning for salicylate toxicity?", "options": ["Tinnitus", "Mild nausea after meals", "Dry mouth", "Photophobia"], "answer": ["A"], "rationale": "Aspirin has typical NSAID side effects plus signs of salicylate toxicity; tinnitus is a key finding."}, {"id": 5, "type": "mc", "stem": "A parent asks if they can give aspirin to a 6-year-old with a fever. What is the nurse's best response?", "options": ["\"Do not give aspirin to infants or children; use a different medication as directed by the provider.\"", "\"Aspirin is safest for children because it prevents clotting.\"", "\"Give aspirin only if the child is also taking ibuprofen.\"", "\"Aspirin is safe if the child takes it with food.\""], "answer": ["A"], "rationale": "Aspirin (not all NSAIDs) is contraindicated in infants and children per the provided materials."}, {"id": 6, "type": "mc", "stem": "A client with rheumatoid arthritis is scheduled to start celecoxib (a second-generation NSAID). Which assessment finding should the nurse report before administration?", "options": ["New chest pain with exertion", "Pain rating 6/10 that decreases with rest", "Mild photophobia during headaches", "Report of muscle spasms in the lower back"], "answer": ["A"], "rationale": "Second-generation NSAIDs have significant cardiovascular risk; new chest pain suggests possible cardiac disease and warrants holding and contacting the provider."}, {"id": 7, "type": "sata", "stem": "Which teaching points should the nurse include for a client prescribed a second-generation NSAID? Select all that apply.", "options": ["Watch for black, tarry stools or vomiting blood/coffee-ground emesis.", "Seek immediate care for chest pain or symptoms of a cardiovascular event.", "Continue the medication through the day of surgery to prevent inflammation.", "Do not take if pregnant.", "Combine with alcohol to decrease stomach upset."], "answer": ["A", "B", "D"], "rationale": "Second-generation NSAIDs can still cause GI ulcers/bleeds and have major cardiac risk. They should be stopped about a week prior to surgery and avoided in pregnancy (category D in these materials). Alcohol increases GI risk."}, {"id": 8, "type": "mc", "stem": "The nurse is reviewing a PRN order for pain: \"acetaminophen 650 mg PO q6h PRN mild pain.\" Which pain score is the best match for this PRN indication?", "options": ["2/10", "6/10", "8/10", "10/10"], "answer": ["A"], "rationale": "In these materials, acetaminophen is appropriate for mild pain, typically not exceeding about 3/10. Moderate to severe pain needs a different strategy."}, {"id": 9, "type": "calc", "stem": "An older adult has received acetaminophen 650 mg PO at 0800, 1400, 2000, and 0200. Based on the not-to-exceed (NTE) guidance for older adults (3 g per 24 hours), can the nurse administer another 650 mg dose at 0800? (Answer Yes or No.)", "answer": ["No"], "rationale": "Four 650 mg doses = 2600 mg. A fifth dose would total 3250 mg in 24 hours, exceeding the 3000 mg NTE for older adults."}, {"id": 10, "type": "calc", "stem": "A client with liver impairment has taken acetaminophen 650 mg PO three times in the last 24 hours. The provider orders another 650 mg now. Using the liver-impairment NTE (2 g per 24 hours), should the nurse administer the dose? (Answer Yes or No.)", "answer": ["No"], "rationale": "Three 650 mg doses = 1950 mg in 24 hours; administering another 650 mg would total 2600 mg, exceeding the 2 g (2000 mg) NTE for liver impairment. Hold and contact the provider."}, {"id": 11, "type": "mc", "stem": "A client overdoses on acetaminophen. Which medication does the nurse anticipate as a potential antidote?", "options": ["Naloxone", "Acetylcysteine", "Sumatriptan", "Celecoxib"], "answer": ["B"], "rationale": "Acetylcysteine is the potential antidote for acetaminophen overdose to help preserve liver function."}, {"id": 12, "type": "sata", "stem": "Which findings should the nurse monitor for possible acetaminophen-related hepatotoxicity? Select all that apply.", "options": ["Jaundice (yellowing of skin)", "Yellowing of sclera (scleral icterus)", "Ascites and weight gain", "Tinnitus", "Coffee-ground emesis", "Elevated AST/ALT"], "answer": ["A", "B", "C", "F"], "rationale": "Acetaminophen toxicity is associated with liver impairment. Signs include jaundice, scleral icterus, ascites/weight gain, and abnormal LFTs (AST/ALT). Tinnitus is linked to salicylate toxicity; coffee-ground emesis suggests GI bleeding."}, {"id": 13, "type": "mc", "stem": "A client is prescribed tramadol for pain. Which pain description best matches the intended indication for tramadol in these materials?", "options": ["Moderate to moderately severe pain", "Severe pain requiring high potency opioids", "Mild pain and fever only", "Abortive migraine therapy"], "answer": ["A"], "rationale": "Tramadol is described as a centrally acting non-opioid used for moderate to moderately severe pain."}, {"id": 14, "type": "sata", "stem": "The nurse is teaching a client taking tramadol. Which statements indicate the client understands the teaching? Select all that apply.", "options": ["\"I will change positions slowly because dizziness can happen.\"", "\"I can safely mix tramadol with alcohol because it's not an opioid.\"", "\"If I have not had a bowel movement in more than 3 days, I'll contact my provider.\"", "\"I should avoid taking this with other centrally acting medications unless prescribed.\"", "\"Respiratory depression is impossible with tramadol.\""], "answer": ["A", "C", "D"], "rationale": "Tramadol commonly causes dizziness/sedation and can contribute to constipation and, less commonly, respiratory depression, especially with other CNS/serotonin-influencing meds. Safety teaching includes avoiding CNS depressants/alcohol and avoiding unsafe combinations."}, {"id": 15, "type": "mc", "stem": "A nurse administers tramadol and notes that the client is also taking an SSRI. What is the priority nursing action?", "options": ["Reassess respiratory rate and level of consciousness more frequently.", "Encourage a high-protein diet to prevent hypoglycemia.", "Place the client on contact precautions.", "Administer naloxone prophylactically."], "answer": ["A"], "rationale": "Tramadol affects serotonin/norepinephrine reuptake and has weak mu activity. Combining with other serotonin-influencing meds increases risk of sedation and potential respiratory depression; close assessment is priority."}, {"id": 16, "type": "mc", "stem": "A client receives cyclobenzaprine for acute muscle spasm. Which assessment finding would most strongly suggest the medication is working too well?", "options": ["New muscle weakness affecting safe ambulation", "Pain score decreased from 7/10 to 4/10", "Mild dry mouth", "Improved range of motion"], "answer": ["A"], "rationale": "Cyclobenzaprine can cause dizziness/drowsiness and muscle weakness. New weakness that impacts safety suggests excessive effect and requires provider notification and safety measures."}, {"id": 17, "type": "sata", "stem": "Which are anticholinergic effects the nurse should assess for in a client taking cyclobenzaprine? Select all that apply.", "options": ["Dry mouth", "Urinary retention", "Blurred vision or difficulty seeing", "Increased sweating", "Constipation"], "answer": ["A", "B", "C", "E"], "rationale": "Anticholinergic effects include dry mouth, urinary retention, blurred vision, and constipation (overall drying and decreased parasympathetic activity)."}, {"id": 18, "type": "mc", "stem": "A client reports burning, pins-and-needles pain in both feet due to diabetic neuropathy. Which medication class from the materials is most appropriate?", "options": ["Anti-convulsant (gabapentin or pregabalin)", "Triptan (sumatriptan)", "First-generation NSAID (ibuprofen)", "Opioid antagonist (naloxone)"], "answer": ["A"], "rationale": "Neuropathic pain described as burning/shocking/pins and needles is treated with adjuvant anti-convulsants such as gabapentin or pregabalin."}, {"id": 19, "type": "mc", "stem": "Which statement about pregabalin is correct based on the course materials?", "options": ["It is a schedule V controlled substance and may be more sedating than gabapentin.", "It requires routine therapeutic blood levels when used for nerve pain.", "It is contraindicated in all adults older than 65 years.", "It is used only as an abortive migraine medication."], "answer": ["A"], "rationale": "Pregabalin is described as a schedule V controlled substance and can be more sedating due to its CNS calcium-channel effects; therapeutic levels are not required for pain management."}, {"id": 20, "type": "ordered", "stem": "Place the following nursing actions in the most appropriate order when a client receives IV morphine for severe pain. (1 = first, 4 = last)", "steps": ["Assess baseline pain using PQRST and obtain respiratory rate/level of consciousness.", "Administer IV morphine as ordered (per policy for rate of administration).", "Reassess pain relief and monitor for opioid side effects (RR, LOC, nausea, pruritus).", "Implement/maintain safety measures (fall precautions, call light, position changes slowly)."], "answer_order": [1, 2, 4, 3], "rationale": "First obtain baseline assessment and safety context, then give medication, ensure safety measures are in place while effects begin, and then reassess effect and side effects after administration."}, {"id": 21, "type": "mc", "stem": "A client on opioids becomes difficult to arouse and has a respiratory rate of 6/min. Which medication is most appropriate to anticipate?", "options": ["Acetylcysteine", "Naloxone", "Ibuprofen", "Sumatriptan"], "answer": ["B"], "rationale": "Naloxone is an opioid antagonist indicated for opioid overdose signs: decreased respiratory rate and decreased level of consciousness."}, {"id": 22, "type": "sata", "stem": "Which findings are common opioid side effects the nurse should monitor? Select all that apply.", "options": ["Respiratory depression", "Constipation", "Urinary retention", "Miosis", "Diarrhea", "Pruritus"], "answer": ["A", "B", "C", "D", "F"], "rationale": "Opioids can cause respiratory depression, constipation, urinary retention, miosis, and pruritus; diarrhea is not typical."}, {"id": 23, "type": "mc", "stem": "A client receiving opioids is at increased risk for aspiration pneumonia primarily because opioids can:", "options": ["Suppress the cough reflex", "Increase salivation", "Cause bronchial dilation", "Increase peristalsis"], "answer": ["A"], "rationale": "Opioids can suppress the cough reflex, reducing airway protective mechanisms and increasing aspiration risk."}, {"id": 24, "type": "mc", "stem": "A client receiving IV opioids reports itching shortly after administration. What is the nurse's best initial interpretation?", "options": ["This may be a histamine-related effect and is not necessarily a true allergy.", "This is diagnostic of anaphylaxis and requires epinephrine immediately.", "This indicates opioid withdrawal and requires naloxone.", "This indicates acetaminophen toxicity."], "answer": ["A"], "rationale": "Pruritus can occur with opioids, especially with rapid IV administration, due to histamine release; it is not automatically an allergic reaction."}, {"id": 25, "type": "mc", "stem": "The nurse is teaching a client prescribed hydrocodone/acetaminophen. Which statement by the client shows correct understanding?", "options": ["\"I need to count the acetaminophen in this medication toward my 24-hour maximum.\"", "\"Because this has acetaminophen, I can also take unlimited DayQuil.\"", "\"This medication cannot cause constipation.\"", "\"If I feel sleepy, I should drive anyway to stay alert.\""], "answer": ["A"], "rationale": "Combination products contain acetaminophen that counts toward the 24-hour NTE; also opioids can cause sedation and constipation, so safety precautions apply."}, {"id": 26, "type": "mc", "stem": "A nurse is evaluating whether naloxone is indicated. Which patient presentation best meets the indication criteria from the materials?", "options": ["Respiratory rate 10/min and mild nausea after oxycodone", "New constipation after hydrocodone", "Difficult to arouse with bradypnea after morphine", "Pruritus after fentanyl patch placement"], "answer": ["C"], "rationale": "Naloxone is given for opioid overdose signs: decreased respiratory rate and decreased level of consciousness; not for other opioid side effects."}, {"id": 27, "type": "sata", "stem": "After naloxone administration, which adverse effects should the nurse anticipate and monitor for? Select all that apply.", "options": ["Vomiting", "Hypertension", "Tachycardia", "Dysrhythmias", "Tinnitus"], "answer": ["A", "B", "C", "D"], "rationale": "Naloxone can rapidly reverse opioid effects and cause vomiting, hypertension, tachycardia, and dysrhythmias. Tinnitus is unrelated."}, {"id": 28, "type": "mc", "stem": "A nurse is explaining why a fentanyl dose is ordered in micrograms while morphine is ordered in milligrams. Which concept best explains this difference?", "options": ["Fentanyl has higher potency than morphine.", "Fentanyl has lower efficacy than morphine.", "Fentanyl has a wider therapeutic window than morphine.", "Fentanyl is an antagonist and morphine is an agonist."], "answer": ["A"], "rationale": "Potency refers to the amount of drug needed to elicit an effect. Highly potent drugs (eg, fentanyl) require smaller doses (often micrograms)."}, {"id": 29, "type": "mc", "stem": "Two analgesics produce the same maximal pain relief, but Drug A requires a much lower dose to achieve it. Drug A is more:", "options": ["Potent", "Efficacious", "Toxic", "Antagonistic"], "answer": ["A"], "rationale": "Potency refers to the dose required for an effect. If maximal effect is the same (efficacy equal) but dose is lower, the drug is more potent."}, {"id": 30, "type": "mc", "stem": "A nurse is teaching about therapeutic index. Which medication characteristic is most concerning for toxicity risk?", "options": ["Low therapeutic index", "High therapeutic index", "Long onset", "Short duration"], "answer": ["A"], "rationale": "A low therapeutic index indicates a narrow margin between therapeutic effect and toxicity, increasing risk for harm and need for close monitoring."}, {"id": 31, "type": "mc", "stem": "A medication begins to work in 15 minutes, reaches its highest effect at 60 minutes, and lasts 6 hours. The 60-minute mark represents the medication's:", "options": ["Onset", "Peak", "Duration", "Therapeutic window"], "answer": ["B"], "rationale": "Peak is the time it takes a medication to have its highest effect or concentration."}, {"id": 32, "type": "mc", "stem": "Which route of administration has 100% bioavailability and the most immediate systemic effect?", "options": ["Intravenous (IV)", "Intramuscular (IM)", "Subcutaneous (SC)", "Oral (PO)"], "answer": ["A"], "rationale": "IV medications enter directly into the bloodstream, providing 100% bioavailability and immediate effect."}, {"id": 33, "type": "mc", "stem": "Which route is intended to have low systemic absorption and is commonly used for skin testing (eg, TB test)?", "options": ["Intradermal", "Intramuscular", "Intravenous", "Intraosseous"], "answer": ["A"], "rationale": "Intradermal administration is between epidermis and dermis with limited systemic absorption; used for tests like PPD."}, {"id": 34, "type": "mc", "stem": "A nurse is caring for a client with severe peripheral arterial disease and a toe infection. Which pharmacokinetic concept best explains why antibiotics may be less effective in the toe?", "options": ["Decreased distribution due to reduced blood flow", "Increased absorption due to high bioavailability", "Increased metabolism due to CYP induction", "Increased excretion due to high GFR"], "answer": ["A"], "rationale": "Distribution depends on adequate blood flow to deliver the drug to target tissues; blocked vessels can limit delivery."}, {"id": 35, "type": "mc", "stem": "A malnourished client has a very low albumin level. Which medication effect is most likely?", "options": ["Increased free drug leading to higher risk of toxicity", "Decreased free drug leading to no therapeutic effect", "Decreased absorption of IV medications", "Faster excretion of all drugs through the kidneys"], "answer": ["A"], "rationale": "Many drugs bind plasma proteins such as albumin. Low albumin means fewer binding sites, increasing free (active) drug and toxicity risk."}, {"id": 36, "type": "calc", "stem": "A nurse administers metoprolol tartrate 50 mg. The half-life is 3 hours. How many milligrams remain after 12 hours? (Round to three decimals.)", "answer": ["3.125"], "rationale": "12 hours is four half-lives (12/3=4). 50 -> 25 -> 12.5 -> 6.25 -> 3.125 mg."}, {"id": 37, "type": "mc", "stem": "Which lab is highlighted in the materials as the gold standard indicator of kidney function for drug excretion concerns?", "options": ["Creatinine", "Blood urea nitrogen (BUN) only", "Sodium", "Hemoglobin"], "answer": ["A"], "rationale": "Creatinine is emphasized as the gold standard for kidney function; BUN can be elevated for other reasons."}, {"id": 38, "type": "mc", "stem": "A client has an eGFR of 25 mL/min. Which nursing implication is most important related to medication therapy?", "options": ["Increased risk of drug toxicity due to impaired excretion; assess and anticipate dose adjustments.", "Decreased risk of toxicity because drugs clear faster.", "Increased drug metabolism in the liver.", "Increased bioavailability of intradermal medications."], "answer": ["A"], "rationale": "Reduced GFR indicates impaired renal excretion, increasing risk for accumulation and toxicity; nurses should assess labs and advocate for dosing changes."}, {"id": 39, "type": "mc", "stem": "A client asks, \"What is pharmacodynamics?\" Which response is best?", "options": ["\"It is what the drug does to the body, including the mechanism of action.\"", "\"It is how the body absorbs, distributes, metabolizes, and excretes the drug.\"", "\"It is the study of kidney clearance of drugs.\"", "\"It is the process of writing a prescription.\""], "answer": ["A"], "rationale": "Pharmacodynamics is what the drug does to the body (mechanism of action). Pharmacokinetics is what the body does to the drug (ADME)."}, {"id": 40, "type": "mc", "stem": "A medication binds to a receptor and blocks the normal body process from occurring. The medication is a(n):", "options": ["Antagonist", "Agonist", "Prodrug", "Metabolite"], "answer": ["A"], "rationale": "An antagonist blocks a receptor responsible for an existing body process."}, {"id": 41, "type": "mc", "stem": "A client with migraine with aura describes flashing zigzag lines followed by unilateral throbbing headache and nausea. Which treatment plan aligns with the materials for abortive therapy?", "options": ["Take sumatriptan at the first sign of the migraine/aura as a PRN abortive medication.", "Take topiramate only during an active migraine attack.", "Take celecoxib daily only during migraine weeks.", "Take naloxone at the first sign of a headache."], "answer": ["A"], "rationale": "Triptans such as sumatriptan are abortive medications taken at the first sign (including aura) to stop an active migraine."}, {"id": 42, "type": "sata", "stem": "Which patients are NOT good candidates for sumatriptan (triptans) based on contraindications described in the materials? Select all that apply.", "options": ["Client with hypertension", "Client with coronary artery disease", "Client with peripheral vascular disease", "Client who is pregnant or planning pregnancy", "Client with migraine without aura and no cardiovascular history"], "answer": ["A", "B", "C", "D"], "rationale": "Triptans can cause coronary vasoconstriction and are contraindicated in cardiovascular disease including hypertension and vessel narrowing (CAD/PVD). They are also not appropriate in pregnancy/planning pregnancy due to teratogenicity in these materials."}, {"id": 43, "type": "mc", "stem": "A client takes their usual dose of sumatriptan and it fails to abort their migraine on three separate occasions. What is the best next step?", "options": ["Notify the health care provider for a new plan.", "Double the dose for the next migraine.", "Start taking sumatriptan daily to prevent migraines.", "Switch to aspirin daily."], "answer": ["A"], "rationale": "Teaching includes that if the usual triptan dose fails three times (on separate migraines), the client should notify the provider; repeat dosing per migraine is discouraged due to vasoconstriction risk."}, {"id": 44, "type": "mc", "stem": "A client is prescribed topiramate for migraine prevention. Which statement indicates the client needs further teaching?", "options": ["\"I will take it every day even if I do not have a migraine.\"", "\"If I have a migraine, I will take an abortive medication rather than extra topiramate.\"", "\"Because this is for prevention, I will only take it when an aura starts.\"", "\"I will call my provider if I need abortive meds more than once a week.\""], "answer": ["C"], "rationale": "Topiramate is a daily scheduled preventive medication, not PRN at aura onset. Abortive meds are used for active migraines."}, {"id": 45, "type": "sata", "stem": "Which are appropriate nursing priorities for a client taking topiramate for migraine prevention? Select all that apply.", "options": ["Perform neurological assessment and assess migraine frequency/need for abortive meds.", "Monitor for CNS-related side effects impacting safety (drowsiness, impaired concentration).", "Obtain routine topiramate therapeutic levels for migraine prevention.", "Reinforce safety precautions if dizziness or sedation occurs.", "Teach that taking extra doses during a migraine will abort it faster."], "answer": ["A", "B", "D"], "rationale": "Topiramate prevention focuses on neuro assessment and monitoring CNS side effects for safety. Therapeutic levels are not required for migraine prevention in these materials, and extra doses during a migraine are not recommended."}, {"id": 46, "type": "ordered", "stem": "A client with asthma is prescribed ibuprofen for fever. The client develops wheezing shortly after the first dose. Place the nursing actions in priority order. (1 = first, 4 = last)", "steps": ["Assess airway, breathing, and oxygenation; obtain vital signs and lung sounds.", "Stop further NSAID dosing and notify the provider.", "Provide or prepare prescribed respiratory support (eg, oxygen/bronchodilator per orders) based on assessment.", "Educate the client to use acetaminophen instead of NSAIDs in the future unless directed otherwise."], "answer_order": [1, 3, 2, 4], "rationale": "First assess ABCs, then intervene to support breathing, then ensure the offending medication is held and provider notified, then provide education after stabilization."}, {"id": 47, "type": "mc", "stem": "A provider writes: \"Ibuprofen 400 mg PO q6h PRN\" but no indication is listed. What is the nurse's best action?", "options": ["Clarify the order, because PRN orders require an indication.", "Administer for any complaint without additional assessment.", "Refuse to administer any PRN medications ever.", "Convert the order to acetaminophen automatically."], "answer": ["A"], "rationale": "PRN orders require an indication (eg, PRN mild pain or fever). The nurse should clarify for safe administration."}, {"id": 48, "type": "sata", "stem": "The nurse is preparing discharge teaching for a client prescribed scheduled gabapentin for nerve pain. Which points should be included? Select all that apply.", "options": ["Expect possible dizziness and drowsiness, especially when starting therapy.", "Do not drive or operate heavy machinery until you know how the medication affects you.", "Therapeutic blood levels must be checked weekly for nerve pain management.", "This medication is typically taken daily on a schedule, not only when pain flares.", "Report excessive sedation that interferes with daily activities."], "answer": ["A", "B", "D", "E"], "rationale": "Gabapentin can cause dizziness/drowsiness; safety precautions are key. For pain management, it is a scheduled daily medication and does not require therapeutic level monitoring. Excess sedation should be reported."}, {"id": 49, "type": "mc", "stem": "A nurse is differentiating acute vs chronic pain during assessment. Which statement is accurate per the materials?", "options": ["Chronic pain lasts longer than 3 months and may not have a well-defined cause.", "Acute pain lasts longer than 3 months and serves no useful purpose.", "Chronic pain always has a clear reversible cause.", "Acute pain is never severe."], "answer": ["A"], "rationale": "Chronic pain is defined as lasting longer than 3 months, often without a well-defined cause, and can significantly impact quality of life."}, {"id": 50, "type": "mc", "stem": "Which sequence best matches the stages of nociceptive pain processing described in the materials?", "options": ["Transduction -> Transmission -> Perception -> Modulation", "Absorption -> Distribution -> Metabolism -> Excretion", "Onset -> Peak -> Duration -> Toxicity", "Efficacy -> Potency -> Therapeutic index -> Bioavailability"], "answer": ["A"], "rationale": "Nociceptive pain becomes a conscious experience through transduction, transmission, perception, and modulation."}];
+const STORAGE_KEY = "nclex_painpharm_attempt_v1";
+
+function defaultState(){
+  return {
+    startedAt: null,
+    durationSec: 90*60,
+    answers: {},
+    flagged: {},
+    submitted: false
+  };
+}
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    return Object.assign(defaultState(), s);
+  } catch(e) {
+    return defaultState();
+  }
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function resetState(){
+  localStorage.removeItem(STORAGE_KEY);
+  state = defaultState();
+}
+
+let state = loadState();
+let currentIndex = 0;
+let tickHandle = null;
+
+function fmtTime(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+
+function computeTimeLeft(){
+  if(!state.startedAt) return state.durationSec;
+  const elapsed = (Date.now() - state.startedAt)/1000;
+  return state.durationSec - elapsed;
+}
+
+function answeredCount(){
+  let c=0;
+  for(const q of QUESTIONS){
+    const a = state.answers[q.id];
+    if(a==null) continue;
+    if(q.type==="mc" && typeof a==="string" && a.trim()!=="") c++;
+    else if(q.type==="calc" && typeof a==="string" && a.trim()!=="") c++;
+    else if(q.type==="sata" && Array.isArray(a) && a.length>0) c++;
+    else if(q.type==="ordered" && a && Array.isArray(a.order) && a.order.length===q.steps.length) c++;
+  }
+  return c;
+}
+
+function flaggedCount(){
+  return Object.keys(state.flagged).length;
+}
+
+function isAnswered(q){
+  const a = state.answers[q.id];
+  if(a==null) return false;
+  if(q.type==="mc" || q.type==="calc") return String(a).trim()!=="";
+  if(q.type==="sata") return Array.isArray(a) && a.length>0;
+  if(q.type==="ordered") return a && Array.isArray(a.order) && a.order.length===q.steps.length;
+  return false;
+}
+
+function isCorrect(q){
+  const a = state.answers[q.id];
+  if(q.type==="calc"){
+    const want = String(q.answer[0]).trim();
+    const got = String(a ?? "").trim();
+    const wantNum = Number(want);
+    const gotNum = Number(got);
+    if(!Number.isNaN(wantNum) && !Number.isNaN(gotNum)){
+      return Math.abs(wantNum - gotNum) <= 0.001;
+    }
+    return got.toLowerCase() === want.toLowerCase();
+  }
+  if(q.type==="mc"){
+    return String(a) === q.answer[0];
+  }
+  if(q.type==="sata"){
+    const got = Array.isArray(a) ? a.slice().sort() : [];
+    const want = q.answer.slice().sort();
+    return JSON.stringify(got) === JSON.stringify(want);
+  }
+  if(q.type==="ordered"){
+    const got = (a && Array.isArray(a.order)) ? a.order : [];
+    const want = q.answer_order;
+    return JSON.stringify(got) === JSON.stringify(want);
+  }
+  return false;
+}
+
+function buildNav(){
+  const nav = document.getElementById("qnav");
+  nav.innerHTML="";
+  for(let i=0;i<QUESTIONS.length;i++){
+    const q = QUESTIONS[i];
+    const b = document.createElement("button");
+    b.className="qbtn";
+    b.textContent = String(i+1);
+    b.addEventListener("click", ()=>{ currentIndex=i; render(); });
+    nav.appendChild(b);
+  }
+}
+
+function updateNavStyles(){
+  const buttons = Array.from(document.querySelectorAll(".qbtn"));
+  buttons.forEach((b, i)=>{
+    const q = QUESTIONS[i];
+    b.classList.toggle("active", i===currentIndex);
+    b.classList.toggle("answered", isAnswered(q));
+    b.classList.toggle("flagged", !!state.flagged[q.id]);
+  });
+}
+
+function render(){
+  const q = QUESTIONS[currentIndex];
+  document.getElementById("headerTitle").textContent = `Question ${currentIndex+1}`;
+  document.getElementById("curMeta").textContent = `${currentIndex+1} / ${QUESTIONS.length}`;
+  document.getElementById("typeMeta").textContent = q.type.toUpperCase();
+  document.getElementById("statusMeta").textContent = isAnswered(q) ? "Answered" : "Not answered";
+  document.getElementById("qTag").textContent = ({
+    mc:"Multiple Choice",
+    sata:"Select all that apply (SATA)",
+    ordered:"Ordered response",
+    calc:"Calculation / short answer"
+  })[q.type] || q.type;
+
+  document.getElementById("stem").textContent = q.stem;
+
+  const area = document.getElementById("interaction");
+  area.innerHTML = "";
+
+  if(q.type==="mc" || q.type==="sata"){
+    const wrap = document.createElement("div");
+    wrap.className="choices";
+    const current = state.answers[q.id] ?? (q.type==="sata" ? [] : "");
+    q.options.forEach((opt, idx)=>{
+      const letter = String.fromCharCode(65+idx);
+      const id = `q${q.id}_${letter}`;
+      const lab = document.createElement("label");
+      lab.className="choice";
+      const inp = document.createElement("input");
+      inp.type = (q.type==="mc") ? "radio" : "checkbox";
+      inp.name = `q${q.id}`;
+      inp.id = id;
+      inp.value = letter;
+      if(q.type==="mc"){
+        inp.checked = (current === letter);
+      } else {
+        inp.checked = Array.isArray(current) && current.includes(letter);
+      }
+      inp.addEventListener("change", ()=>{
+        if(q.type==="mc"){
+          state.answers[q.id] = letter;
+        } else {
+          const arr = new Set(Array.isArray(state.answers[q.id]) ? state.answers[q.id] : []);
+          if(inp.checked) arr.add(letter); else arr.delete(letter);
+          state.answers[q.id] = Array.from(arr);
+        }
+        saveState();
+        renderMeta();
+        updateNavStyles();
+      });
+
+      const txt = document.createElement("div");
+      txt.innerHTML = `<strong>${letter}.</strong> ${opt}`;
+      lab.appendChild(inp);
+      lab.appendChild(txt);
+      wrap.appendChild(lab);
+    });
+    area.appendChild(wrap);
+  }
+
+  if(q.type==="calc"){
+    const box = document.createElement("div");
+    box.className="calcBox";
+    const inp = document.createElement("input");
+    inp.type="text";
+    inp.placeholder="Type your answer (e.g., Yes, No, 3.125)";
+    inp.value = state.answers[q.id] ?? "";
+    inp.addEventListener("input", ()=>{
+      state.answers[q.id] = inp.value;
+      saveState();
+      renderMeta();
+      updateNavStyles();
+    });
+    box.appendChild(inp);
+    const hint = document.createElement("div");
+    hint.className="note";
+    hint.textContent = "Tip: For numeric answers, enter a number (decimals allowed). For Yes/No, type Yes or No.";
+    box.appendChild(hint);
+    area.appendChild(box);
+  }
+
+  if(q.type==="ordered"){
+    const ordWrap = document.createElement("div");
+    ordWrap.className="ordered";
+    let cur = state.answers[q.id]?.order;
+    if(!Array.isArray(cur) || cur.length !== q.steps.length){
+      cur = Array.from({length:q.steps.length}, (_,i)=> i+1);
+      state.answers[q.id] = {order:cur};
+      saveState();
+    }
+    function renderSteps(){
+      ordWrap.innerHTML="";
+      cur.forEach((stepNum, pos)=>{
+        const row = document.createElement("div");
+        row.className="step";
+        const handle = document.createElement("div");
+        handle.className="handle";
+        handle.textContent = String(pos+1);
+        const txt = document.createElement("div");
+        txt.className="txt";
+        txt.textContent = q.steps[stepNum-1];
+        const arrows = document.createElement("div");
+        arrows.className="arrows";
+        const up = document.createElement("button");
+        up.textContent = "▲";
+        up.disabled = pos===0;
+        up.addEventListener("click", ()=>{
+          const t = cur[pos-1]; cur[pos-1]=cur[pos]; cur[pos]=t;
+          state.answers[q.id] = {order:cur};
+          saveState();
+          renderSteps();
+          renderMeta();
+          updateNavStyles();
+        });
+        const dn = document.createElement("button");
+        dn.textContent = "▼";
+        dn.disabled = pos===cur.length-1;
+        dn.addEventListener("click", ()=>{
+          const t = cur[pos+1]; cur[pos+1]=cur[pos]; cur[pos]=t;
+          state.answers[q.id] = {order:cur};
+          saveState();
+          renderSteps();
+          renderMeta();
+          updateNavStyles();
+        });
+        arrows.appendChild(up);
+        arrows.appendChild(dn);
+        row.appendChild(handle);
+        row.appendChild(txt);
+        row.appendChild(arrows);
+        ordWrap.appendChild(row);
+      });
+      const note = document.createElement("div");
+      note.className="note";
+      note.textContent = "Use the arrows to place the actions in correct order.";
+      ordWrap.appendChild(note);
+    }
+    renderSteps();
+    area.appendChild(ordWrap);
+  }
+
+  document.getElementById("prevBtn").disabled = currentIndex===0;
+  document.getElementById("nextBtn").disabled = currentIndex===QUESTIONS.length-1;
+
+  updateNavStyles();
+  renderMeta();
+}
+
+function renderMeta(){
+  document.getElementById("answeredCount").textContent = answeredCount();
+  document.getElementById("flaggedCount").textContent = flaggedCount();
+  const q = QUESTIONS[currentIndex];
+  document.getElementById("statusMeta").textContent = isAnswered(q) ? "Answered" : "Not answered";
+}
+
+function startTimer(){
+  if(tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(()=>{
+    const left = computeTimeLeft();
+    document.getElementById("timer").textContent = fmtTime(left);
+    if(left <= 0){
+      clearInterval(tickHandle);
+      tickHandle = null;
+      submitExam(true);
+    }
+  }, 250);
+}
+
+function submitExam(auto=false){
+  if(state.submitted) return;
+  if(!auto){
+    const ok = confirm("Submit now? You will see answers and rationales.");
+    if(!ok) return;
+  }
+  state.submitted = true;
+  saveState();
+
+  let score=0;
+  for(const q of QUESTIONS){
+    if(isCorrect(q)) score++;
+  }
+
+  document.getElementById("exam").classList.add("hidden");
+  document.getElementById("results").classList.remove("hidden");
+  document.getElementById("scoreText").textContent = `${score}/${QUESTIONS.length}`;
+
+  const body = document.getElementById("resultsBody");
+  body.innerHTML = `<p class="note">Auto-grading note: SATA requires an exact match. Ordered response requires the exact sequence. Calculations accept a small numeric tolerance (plus case-insensitive Yes/No).</p>`;
+
+  for(let i=0;i<QUESTIONS.length;i++){
+    const q = QUESTIONS[i];
+    const ok = isCorrect(q);
+    const div = document.createElement("div");
+    div.className="resultItem";
+    const badge = `<span class="badge ${ok ? "ok":"no"}">${ok ? "Correct":"Incorrect"}</span>`;
+    const your = state.answers[q.id];
+    let yourTxt = "";
+    let correctTxt = "";
+
+    if(q.type==="mc"){
+      yourTxt = your ? your : "(no answer)";
+      correctTxt = q.answer[0];
+    } else if(q.type==="sata"){
+      yourTxt = (Array.isArray(your) && your.length) ? your.slice().sort().join(", ") : "(no answer)";
+      correctTxt = q.answer.slice().sort().join(", ");
+    } else if(q.type==="calc"){
+      yourTxt = (your ?? "").toString().trim() || "(no answer)";
+      correctTxt = q.answer[0];
+    } else if(q.type==="ordered"){
+      const y = (your && Array.isArray(your.order)) ? your.order.join("-") : "(no answer)";
+      const c = q.answer_order.join("-");
+      yourTxt = y;
+      correctTxt = c;
+    }
+
+    div.innerHTML = `
+      <div style="margin-bottom:6px;">
+        ${badge}<strong>Q${i+1}.</strong> ${q.stem}
+      </div>
+      <div class="note"><strong>Your answer:</strong> ${yourTxt} &nbsp;&nbsp; <strong>Correct:</strong> ${correctTxt}</div>
+      <div class="rationale"><strong>Rationale:</strong> ${q.rationale}</div>
+    `;
+    body.appendChild(div);
+  }
+
+  body.insertAdjacentHTML("beforeend", `
+    <div class="controls" style="margin-top:16px;">
+      <button class="btn ok" onclick="window.print()">Print / Save as PDF</button>
+      <button class="btn" onclick="resetState(); location.reload();">Start New Attempt</button>
+    </div>
+  `);
+}
+
+document.getElementById("startBtn").addEventListener("click", ()=>{
+  if(state.submitted){
+    alert("This attempt is already submitted. Use 'Reset Saved Attempt' to start over.");
+    return;
+  }
+  if(!state.startedAt){
+    state.startedAt = Date.now();
+    saveState();
+  }
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("exam").classList.remove("hidden");
+  buildNav();
+  render();
+  document.getElementById("timer").textContent = fmtTime(computeTimeLeft());
+  startTimer();
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  const ok = confirm("Reset saved attempt? This clears answers and timer for this browser.");
+  if(!ok) return;
+  resetState();
+  location.reload();
+});
+
+document.getElementById("prevBtn").addEventListener("click", ()=>{
+  if(currentIndex>0) currentIndex--;
+  render();
+});
+document.getElementById("nextBtn").addEventListener("click", ()=>{
+  if(currentIndex<QUESTIONS.length-1) currentIndex++;
+  render();
+});
+document.getElementById("flagBtn").addEventListener("click", ()=>{
+  const q = QUESTIONS[currentIndex];
+  if(state.flagged[q.id]) delete state.flagged[q.id];
+  else state.flagged[q.id]=true;
+  saveState();
+  renderMeta();
+  updateNavStyles();
+});
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  const q = QUESTIONS[currentIndex];
+  delete state.answers[q.id];
+  if(q.type==="ordered"){
+    state.answers[q.id] = {order: Array.from({length:q.steps.length}, (_,i)=> i+1)};
+  }
+  saveState();
+  render();
+});
+document.getElementById("submitBtn").addEventListener("click", ()=> submitExam(false));
+
+(function init(){
+  if(state.submitted){
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("results").classList.remove("hidden");
+    let score=0;
+    for(const q of QUESTIONS) if(isCorrect(q)) score++;
+    document.getElementById("scoreText").textContent = `${score}/${QUESTIONS.length}`;
+    const body = document.getElementById("resultsBody");
+    body.innerHTML = `<p class="note">This attempt was already submitted on this browser.</p>`;
+    for(let i=0;i<QUESTIONS.length;i++){
+      const q = QUESTIONS[i];
+      const ok = isCorrect(q);
+      const div = document.createElement("div");
+      div.className="resultItem";
+      const badge = `<span class="badge ${ok ? "ok":"no"}">${ok ? "Correct":"Incorrect"}</span>`;
+      const your = state.answers[q.id];
+      let yourTxt="", correctTxt="";
+      if(q.type==="mc"){ yourTxt = your ? your : "(no answer)"; correctTxt=q.answer[0]; }
+      else if(q.type==="sata"){ yourTxt=(Array.isArray(your)&&your.length)?your.slice().sort().join(", "):"(no answer)"; correctTxt=q.answer.slice().sort().join(", "); }
+      else if(q.type==="calc"){ yourTxt=(your??"").toString().trim()||"(no answer)"; correctTxt=q.answer[0]; }
+      else if(q.type==="ordered"){ yourTxt=(your&&Array.isArray(your.order))?your.order.join("-"):"(no answer)"; correctTxt=q.answer_order.join("-"); }
+      div.innerHTML = `<div style="margin-bottom:6px;">${badge}<strong>Q${i+1}.</strong> ${q.stem}</div>
+        <div class="note"><strong>Your answer:</strong> ${yourTxt} &nbsp;&nbsp; <strong>Correct:</strong> ${correctTxt}</div>
+        <div class="rationale"><strong>Rationale:</strong> ${q.rationale}</div>`;
+      body.appendChild(div);
+    }
+    body.insertAdjacentHTML("beforeend", `
+      <div class="controls" style="margin-top:16px;">
+        <button class="btn ok" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn" onclick="resetState(); location.reload();">Start New Attempt</button>
+      </div>
+    `);
+    return;
+  }
+
+  if(state.startedAt){
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("exam").classList.remove("hidden");
+    buildNav();
+    render();
+    document.getElementById("timer").textContent = fmtTime(computeTimeLeft());
+    startTimer();
+  }
+})();
+</script>
+</body>
+</html>
